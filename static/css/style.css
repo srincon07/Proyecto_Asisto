@@ -1,0 +1,1017 @@
+/* ===========================================
+   ASISTENCIA A EVENTOS - Estilos Personalizados
+   ============================================= */
+
+/* ========== VARIABLES Y CONFIGURACIÓN GLOBAL ========== */
+:root {
+    --color-primary: #1e2b58;
+    --primary-navy: #1e2b58;
+    --color-primary-dark: #16213e;
+    --color-primary-soft: #24355f;
+    --color-white: #ffffff;
+    --color-success: #198754;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-light: #f8f9fa;
+    --color-border: #dee2e6;
+    --color-text: #212529;
+    --color-text-muted: #495057;
+    --accent-blue: #5c7cf2;
+    --white: #ffffff;
+    --text-muted: #dae1f5;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    --transition: all 0.2s ease-in-out;
+}
+
+/* ========== TIPOGRAFÍA Y BODY ========== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--color-text);
+    background-color: #e2e8f0 !important;
+}
+
+/* ========== ENCABEZADOS ========== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--white);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+h4 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* ========== HEADER PERSONALIZADO ========== */
+.custom-header {
+    background-color: var(--primary-navy);
+    color: white;
+    padding: 1rem !important;
+}
+
+.custom-header h4 {
+    color: white;
+    margin: 0;
+}
+
+.custom-header .btn-outline-light {
+    color: white;
+    border-color: white;
+    transition: var(--transition);
+}
+
+.custom-header .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    color: white;
+}
+
+/* ========== PORTAL PRINCIPAL ========== */
+.portal-header {
+    background-color: var(--primary-navy);
+    color: var(--white);
+    padding: 50px 20px 60px 20px;
+    position: relative;
+    text-align: center;
+    /* Degradado sutil de fondo */
+    background-image: linear-gradient(rgba(30, 43, 88, 0.95), rgba(30, 43, 88, 0.95));
+}
+
+/* Borde inferior serrado (efecto triángulos) */
+.portal-header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background-color: var(--primary-navy);
+    /* Mapeo de coordenadas para los picos del triángulo */
+    clip-path: polygon(0 0, 2.5% 100%, 5% 0, 7.5% 100%, 10% 0, 12.5% 100%, 15% 0, 17.5% 100%, 20% 0, 22.5% 100%, 25% 0, 27.5% 100%, 30% 0, 32.5% 100%, 35% 0, 37.5% 100%, 40% 0, 42.5% 100%, 45% 0, 47.5% 100%, 50% 0, 52.5% 100%, 55% 0, 57.5% 100%, 60% 0, 62.5% 100%, 65% 0, 67.5% 100%, 70% 0, 72.5% 100%, 75% 0, 77.5% 100%, 80% 0, 82.5% 100%, 85% 0, 87.5% 100%, 90% 0, 92.5% 100%, 95% 0, 97.5% 100%, 100% 0);
+}
+
+.portal-tagline {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 8px;
+}
+
+.portal-main-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.portal-sub-title {
+    font-size: 1.25rem;
+    opacity: 0.85;
+    font-weight: 300;
+    margin-bottom: 25px;
+}
+
+/* Grid de información del evento */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 15px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .info-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.info-card-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+}
+
+.info-card-item i {
+    background: var(--white);
+    color: var(--primary-navy);
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.info-card-text {
+    text-align: left;
+    line-height: 1.3;
+}
+
+.info-card-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.6;
+}
+
+.info-card-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Ajuste de superposición para que el formulario flote sobre el fondo */
+.overlap-container {
+    margin-top: -30px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ========== CARDS ========== */
+.card {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ========== FORMULARIOS ========== */
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-border);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(30, 43, 88, 0.25);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* ========== PORTAL GENERAL ========== */
+.portal-page {
+    background-color: #e2e8f0;
+}
+
+.section-offset {
+    margin-top: -30px;
+}
+
+.text-purple-strong {
+    color: #8e24aa;
+}
+
+.text-warning-strong {
+    color: #f57f17;
+}
+
+.icon-box-purple {
+    background-color: #f3e5f5;
+    color: #8e24aa;
+}
+
+.icon-box-warning {
+    background-color: #fff8e1;
+    color: #f57f17;
+}
+
+.portal-card {
+    border: none;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--border-radius-lg);
+}
+
+.hero-section {
+    background:
+        /*linear-gradient(135deg, #1e293b 0%, #0f172a 100%)*/
+        var(--primary-navy);
+    color: white;
+    padding: 80px 0;
+    border-bottom-left-radius: 50px;
+    border-bottom-right-radius: 50px;
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.icon-box {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+}
+
+.section-overlap {
+    margin-top: -30px;
+    position: relative;
+    z-index: 10;
+}
+
+.login-page .card {
+    background-color: #ffffff;
+}
+
+.login-page .input-group-text,
+.login-page .form-control {
+    border-color: #dee2e6;
+}
+
+.login-page .form-control:focus {
+    box-shadow: none;
+    border-color: var(--color-primary-dark);
+}
+
+.login-page .btn-success {
+    background-color: #4a8d7a;
+    border: none;
+    color: white;
+}
+
+.login-page .btn-success:hover {
+    background-color: #3b7363;
+    color: white;
+}
+
+.login-page .posicion-logo {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 20px;
+}
+
+.login-page .tarjeta-sobrepuesta {
+    position: relative;
+    z-index: 2;
+    margin-top: 55px;
+    background: #ffffff;
+}
+
+.login-page .login-logo {
+    max-width: 250px;
+}
+
+.password-change-page input[type="password"] {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.password-change-page input[type="password"]:focus {
+    border-color: var(--color-warning);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+}
+
+.password-change-page .form-text {
+    font-size: 0.8rem;
+}
+
+.roles-section .form-check {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.roles-section .form-check-input {
+    width: 1.25em;
+    height: 1.25em;
+    margin-top: 0.25em;
+    border-radius: 0.25em;
+    border: 2px solid var(--color-border);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.roles-section .form-check-input:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.roles-section .form-check-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(75, 93, 220, 0.25);
+}
+
+.roles-section .form-check-label {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-left: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ========== TABLAS ========== */
+.table {
+    margin-bottom: 0;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: var(--color-light);
+}
+
+.table-hover>tbody>tr {
+    transition: var(--transition);
+}
+
+.table-hover>tbody>tr:hover {
+    background-color: #e9ecef;
+}
+
+.table th {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--color-border);
+    color: var(--color-text);
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+}
+
+.table td {
+    padding: 0.875rem 0.75rem;
+    vertical-align: middle;
+}
+
+.cell-genero,
+.cell-estado {
+    min-width: 120px;
+}
+
+.cell-acciones {
+    min-width: 140px;
+}
+
+/* ========== BOTONES ========== */
+.btn {
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    padding: 0.5rem 1rem;
+}
+
+.btn-sm {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.0625rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-navy);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #157347;
+    border-color: #157347;
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+    color: white;
+}
+
+.btn-warning {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: #000;
+}
+
+.btn-light {
+    background-color: #ffffff;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-light:hover {
+    background-color: var(--color-light);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-group .btn {
+    margin: 0 2px;
+}
+
+/* ========== BADGES ========== */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    border-radius: var(--border-radius-sm);
+}
+
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+    color: white;
+}
+
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+    color: white;
+}
+
+.badge.bg-warning {
+    background-color: var(--color-warning) !important;
+    color: #000;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000;
+}
+
+/* ========== ALERTAS ========== */
+.alert {
+    border-radius: var(--border-radius-md);
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid var(--color-danger);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid var(--color-success);
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid var(--color-warning);
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #0dcaf0;
+}
+
+/* ========== ESTILOS DE TEXTO ========== */
+.text-primary {
+    color: var(--color-primary) !important;
+}
+
+.text-success {
+    color: var(--color-success) !important;
+}
+
+.text-danger {
+    color: var(--color-danger) !important;
+}
+
+.text-warning {
+    color: var(--color-warning) !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.border-top {
+    border-top: 1px solid var(--color-border) !important;
+}
+
+.border-bottom {
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* ========== UTILIDADES DE ESPACIADO ========== */
+.pb-3 {
+    padding-bottom: 1rem !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
+
+/* ========== ESTRUCTURA DE APLICACIONES ========== */
+
+/* Estructura - Contenedor de Objetivos */
+.obj-container {
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background: white;
+    border: 1px solid var(--color-border);
+    transition: var(--transition);
+}
+
+.obj-container:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.obj-container .bg-light {
+    background-color: var(--color-light) !important;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.obj-container .text-brand {
+    color: var(--primary-navy);
+}
+
+.line-item {
+    border-bottom: 1px solid var(--color-border);
+    transition: var(--transition);
+}
+
+.line-item:last-child {
+    border-bottom: none;
+}
+
+.line-item:hover {
+    background-color: var(--color-light);
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+    .card {
+        margin: 0 -15px;
+        border-radius: 0;
+        box-shadow: none;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .cell-genero,
+    .cell-estado,
+    .cell-acciones {
+        min-width: auto;
+    }
+
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .container {
+        padding: 0;
+    }
+
+    .custom-header {
+        padding: 0.75rem !important;
+    }
+
+    .custom-header h4 {
+        font-size: 1rem;
+    }
+
+    .obj-container {
+        margin: 0 -15px 1rem -15px;
+        border-radius: 0;
+    }
+
+    .roles-section {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .container-fluid,
+    .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .card {
+        margin: 0;
+    }
+
+    .btn-group .btn {
+        margin: 2px 0;
+    }
+
+    .d-flex {
+        flex-direction: column !important;
+    }
+
+    .gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+}
+
+/* ========== ANIMACIONES Y TRANSICIONES ========== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: slideIn 0.3s ease-in-out;
+}
+
+/* ========== IMPRESIÓN ========== */
+@media print {
+
+    .btn,
+    .btn-group,
+    .btn-outline-light,
+    .custom-header {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+.select2-container--default .select2-selection--single {
+    height: 38px;
+    border: 1px solid #dee2e6;
+    line-height: 38px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 35px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+}
+
+/* ========== ESTILOS PERSONALIZADOS PARA PROGRAMAR ACTIVIDAD ========== */
+.pulse-success {
+    animation: pulse-animation 2s infinite;
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+}
+
+@keyframes pulse-animation {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+.table thead th {
+    background-color: #212529;
+    color: white;
+    border: none;
+}
+
+/* Mantiene los encabezados visibles al hacer scroll en la lista de cargos */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .125);
+}
+
+/* Scrollbar personalizado y sutil para navegadores modernos */
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Efecto visual opcional para las filas seleccionadas */
+.table-success-light {
+    background-color: rgba(25, 135, 84, 0.04) !important;
+}
+
+
+@media print {
+
+    /* 1. Configuración de página y márgenes físicos */
+    @page {
+        size: letter portrait;
+        margin: 1.2cm 1.5cm 1.5cm 1.5cm;
+        /* Márgenes ejecutivos estándares */
+    }
+
+    /* 2. Limpieza total de UI web, fondos y componentes interactivos */
+    body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Arial', 'Helvetica', sans-serif !important;
+        font-size: 11px !important;
+        /* Tipografía más compacta para reportes densos */
+    }
+
+    /* Ocultar elementos innecesarios: Navbars, botones, inputs y las tarjetas de conteo de impacto */
+    .navbar,
+    .btn,
+    .input-group,
+    .btn-group,
+    #btnLimpiarBuscar,
+    .tracking-wider,
+    .col-md-4.text-md-end {
+        /* Esto oculta las tarjetas verdes e informativas de conteo */
+        display: none !important;
+    }
+
+    /* 3. Ajuste estructural del contenedor del reporte */
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Eliminar sombras de Bootstrap, bordes curvos exagerados y fondos grises */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background-color: transparent !important;
+    }
+
+    /* Ajustar el título principal del evento para que no se vea gigantesco */
+    h1 {
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+        margin-top: 10px !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* Corregir o remover títulos de secciones que queden huérfanos o cortados */
+    h4.text-secondary {
+        font-size: 13px !important;
+        font-weight: bold !important;
+        color: #333333 !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Ocultar la fila de acciones del botón imprimir */
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 4. Maquetación Corporativa de la Tabla de Asistentes */
+    .table-responsive {
+        overflow: visible !important;
+        /* Evita que la tabla o los textos se recorten lateralmente */
+    }
+
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 10px !important;
+    }
+
+    /* Reemplazar los encabezados grises web por un formato clásico de reporte impreso */
+    .table-light {
+        background-color: transparent !important;
+    }
+
+    .table th {
+        background-color: #f1f1f1 !important;
+        /* Fondo gris claro corporativo para títulos */
+        color: #000000 !important;
+        font-weight: bold !important;
+        text-transform: uppercase;
+        font-size: 10px !important;
+        border-bottom: 2px solid #333333 !important;
+        /* Línea de contabilidad */
+        padding: 6px 8px !important;
+    }
+
+    /* Celdas limpias, compactas y legibles */
+    .table td {
+        border-bottom: 1px solid #e0e0e0 !important;
+        padding: 5px 8px !important;
+        vertical-align: middle !important;
+        font-size: 11px !important;
+    }
+
+    /* Control de saltos de página inteligentes */
+    .table tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .table thead {
+        display: table-header-group !important;
+        /* Si el reporte tiene varias hojas, repite los encabezados */
+    }
+
+    /* 5. Transformar Badges Web en Indicadores de Texto Plano Plano */
+    .badge {
+        background-color: transparent !important;
+        color: #000000 !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        font-weight: bold !important;
+        text-transform: uppercase;
+    }
+
+    .badge i {
+        display: none !important;
+        /* Elimina iconos de Bootstrap innecesarios en papel */
+    }
+
+    /* Optimizar el bloque de trazabilidad temporal para que ocupe menos espacio */
+    .text-muted {
+        color: #555555 !important;
+    }
+
+    .text-success {
+        color: #000000 !important;
+        /* Cambiar a negro para evitar problemas de contraste */
+    }
+
+    /* Remueve los encabezados y pies de página automáticos del navegador (URL, Título web, Fecha nativa) */
+    @page {
+        margin-top: 1.2cm;
+        margin-bottom: 1.5cm;
+    }
+}
