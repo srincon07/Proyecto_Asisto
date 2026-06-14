@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Iniciar Sesión - Sistema Asisto{% endblock %}
+{% block body_class %}bg-light login-page{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center posicion-logo">
+                        <img src="{% static 'images/Asisto_Logo_Horizontal.png' %}" alt="Logo Asisto" class="img-fluid login-logo">
+                    </div>
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger small rounded-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Correo o contraseña incorrectos. Intenta nuevamente.
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">Correo</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="email" name="username" id="id_username" class="form-control bg-white border-start-0 ps-0" placeholder="ejemplo@organizacion.com" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label fw-bold text-secondary text-uppercase small" style="letter-spacing: 0.5px;">Contraseña</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                                <input type="password" name="password" id="id_password" class="form-control bg-white border-start-0 ps-0" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm py-3 mt-2">
+                            Autenticar
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'password_reset' %}" class="text-decoration-none small text-muted">
+                            <u>¿Olvidaste tu contraseña o necesitas asignarla?</u>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

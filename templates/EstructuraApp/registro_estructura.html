@@ -1,0 +1,264 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestión de Estructura - Asisto{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Encabezado de la Agenda -->
+    <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+            <h2 class="m-0 text-primary h4 fw-bold">Gestión Objetivos y Líneas</h2>
+        </div>
+        <a href="{% url 'EstructuraApp:gestionar_tipos' %}" class="btn btn-primary d-flex align-items-center shadow-sm">
+            <i class="bi bi-list-task me-2"></i> Ir a Gestión Tipos de Actividad
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna 1: Registro de Objetivo -->
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-header custom-header py-3">
+                    <h5 class="m-0 fw-bold text-white">
+                        <i class="bi bi-target me-2"></i> {{ titulo_obj|default:"Nuevo Objetivo" }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipo_registro" value="objetivo">
+                        
+
+                        {% if form_obj.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {{ form_obj.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form_obj.id_unidad.label }}</label>
+                            {{ form_obj.id_unidad }}
+                            {% if form_obj.id_unidad.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form_obj.id_unidad.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form_obj.nombre_objetivo.label }}</label>
+                            {{ form_obj.nombre_objetivo }}
+                            {% if form_obj.nombre_objetivo.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form_obj.nombre_objetivo.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> Guardar Objetivo
+                        </button>
+                        
+                        {% if obj_id %}
+                            <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-secondary w-100 mt-2 fw-bold">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                            </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 2: Registro de Línea -->
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-header custom-header py-3">
+                    <h5 class="m-0 fw-bold text-white">
+                        <i class="bi bi-diagram-3 me-2"></i> {{ titulo_lin|default:"Nueva Línea" }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipo_registro" value="linea">
+                        
+                        {% if form_lin.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {{ form_lin.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form_lin.id_objetivo.label }}</label>
+                            {{ form_lin.id_objetivo }}
+                            {% if form_lin.id_objetivo.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form_lin.id_objetivo.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form_lin.nombre_linea.label }}</label>
+                            {{ form_lin.nombre_linea }}
+                            {% if form_lin.nombre_linea.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form_lin.nombre_linea.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> Guardar Línea
+                        </button>
+                        
+                        {% if linea_id %}
+                            <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-secondary w-100 mt-2 fw-bold">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                            </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jerarquía de Estructura -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-4">
+                <i class="bi bi-diagram-2 me-2"></i> Estructura Actual
+            </h4>
+
+            {% if objetivos %}
+                <div class="list-group">
+                    {% for obj in objetivos %}
+                        <div class="obj-container">
+                            <!-- Header del Objetivo -->
+                            <div class="bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
+                                <div class="flex-grow-1">
+                                    <span class="fw-bold text-primary text-uppercase small">
+                                        <i class="bi bi-target me-2"></i>{{ obj.nombre_objetivo }}
+                                    </span>
+                                </div>
+                                <div class="btn-group shadow-sm" role="group">
+                                    <a href="{% url 'EstructuraApp:editar_estructura' 'obj' obj.id %}" class="btn btn-sm btn-warning" title="Editar objetivo">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <button type="button" onclick="confirmarEliminacionObjetivo('{{ obj.id }}', '{{ obj.nombre_objetivo|escapejs }}')" class="btn btn-sm btn-danger" title="Eliminar objetivo">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Líneas del Objetivo -->
+                            <div class="bg-white">
+                                {% for linea in obj.lineas.all %}
+                                    <div class="line-item d-flex justify-content-between align-items-center ps-5 pe-3">
+                                        <span class="text-secondary small fw-semibold">
+                                            <i class="bi bi-diagram-3 me-2"></i>{{ linea.nombre_linea }}
+                                        </span>
+                                        <div class="btn-group shadow-sm" role="group">
+                                            <a href="{% url 'EstructuraApp:editar_estructura' 'lin' linea.id %}" class="btn btn-sm btn-warning" title="Editar línea">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                            <button type="button" onclick="confirmarEliminacionLinea('{{ linea.id }}', '{{ linea.nombre_linea|escapejs }}')" class="btn btn-sm btn-danger" title="Eliminar línea">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="py-3 ps-5 small text-muted fst-italic">
+                                        <i class="bi bi-inbox me-1"></i> Sin líneas asociadas
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Aún no hay objetivos registrados. Comienza creando el primero en el formulario superior.
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmarEliminacionObjetivo(id, nombre) {
+    Swal.fire({
+        title: '¿Eliminar objetivo?',
+        html: `Estás a punto de eliminar el objetivo <strong>${nombre}</strong>.<br><small>Las líneas asociadas también serán eliminadas.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const baseUrl = "{% url 'EstructuraApp:gestion_estructura' %}";
+            const url = `${baseUrl}eliminar/obj/${id}/`;
+            window.location.href = url;
+        }
+    });
+}
+
+function confirmarEliminacionLinea(id, nombre) {
+    Swal.fire({
+        title: '¿Eliminar línea?',
+        html: `Estás a punto de eliminar la línea <strong>${nombre}</strong>.<br><small>Esta acción no se puede deshacer.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const baseUrl = "{% url 'EstructuraApp:gestion_estructura' %}";
+            const url = `${baseUrl}eliminar/lin/${id}/`;
+            window.location.href = url;
+        }
+    });
+}
+
+// Mostrar mensajes de éxito/error
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Operación Exitosa!',
+                    text: "{{ message }}",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            {% elif message.tags == 'error' %}
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ message }}",
+                    confirmButtonColor: 'rgb(75, 93, 220)'
+                });
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

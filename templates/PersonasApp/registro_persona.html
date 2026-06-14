@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+{% load form_utils %}
+
+{% block title %}{% if id_persona > 0 %}Editar{% else %}Registro{% endif %} de Persona - Asistencia a Eventos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow border-0 mx-auto" style="max-width: 950px;">
+        <div class="card-header custom-header py-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-light me-3"><i class="bi bi-house-door-fill"></i></a>
+                <h4 class="m-0 fw-bold">
+                    <i class="bi bi-person-gear me-2"></i> {% if id_persona > 0 %}Modificar Datos de Persona{% else %}Nuevo Registro de Persona{% endif %}
+                </h4>
+            </div>
+            <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold">
+                <i class="bi bi-list-ul me-1"></i> Ver Listado
+            </a>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Número de Identificación</label>
+                        {{ form.identificacion }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Nombres</label>
+                        {{ form.nombres }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Apellidos</label>
+                        {{ form.apellidos }}
+                    </div>
+
+                    <div class="col-md-8 mt-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Organización o Dependencia de Origen</label>
+                        {{ form.organizacion_origen }}
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Condición de Discapacidad</label>
+                        {{ form.discapacidad }}
+                    </div>
+
+                    <div class="col-md-4 mt-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Correo Electrónico</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Teléfono</label>
+                        {{ form.telefono }}
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Género</label>
+                        {{ form.genero }}
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <ul class="nav nav-tabs" id="personTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles-pane" type="button" role="tab">
+                                    <i class="bi bi-person-badge me-1"></i> Roles y Unidades
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold" id="cargos-tab" data-bs-toggle="tab" data-bs-target="#cargos-pane" type="button" role="tab">
+                                    <i class="bi bi-briefcase me-1"></i> Cargos Institucionales
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content border border-top-0 p-4 bg-light rounded-bottom" id="personTabsContent">
+                            <div class="tab-pane fade show active" id="roles-pane" role="tabpanel" aria-labelledby="roles-tab">
+                                <div class="roles-section">
+                                    {% for rol in form.roles_db %}
+                                    <div class="row align-items-center mb-3 bg-white p-2 rounded border-start border-primary border-3 shadow-sm">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                {% with checkbox_name="rol_"|addstr:rol.id %}
+                                                    {% for field in form %}{% if field.name == checkbox_name %}{{ field }}{% endif %}{% endfor %}
+                                                {% endwith %}
+                                                <label class="form-check-label fw-semibold" for="role_{{ rol.id }}">
+                                                    {{ rol.nombre_role }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="cargos-pane" role="tabpanel" aria-labelledby="cargos-tab">
+                                <div class="p-3 bg-white rounded shadow-sm border">
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light text-muted">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text" id="searchCargo" class="form-control" placeholder="Buscar por nombre de cargo o unidad/departamento...">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 text-md-end mt-2 mt-md-0">
+                                            <small class="text-muted">
+                                                Mostrando: <strong id="totalCargos">0</strong> cargos en total.
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm table-hover align-middle mb-0" id="tableCargos">
+                                            <thead class="table-light sticky-top" style="z-index: 1;">
+                                                <tr>
+                                                    <th style="width: 50px;" class="text-center">Asignar</th>
+                                                    <th>Cargo</th>
+                                                    <th style="width: 180px;">Estado del Cargo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for cargo in form.cargos_db %}
+                                                <tr class="cargo-row">
+                                                    <td class="text-center">
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            {% with cb_cargo="cargo_"|addstr:cargo.id %}
+                                                                {% for field in form %}
+                                                                    {% if field.name == cb_cargo %}
+                                                                        <div class="cargo-checkbox-wrapper">
+                                                                            {{ field }}
+                                                                        </div>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            {% endwith %}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    <td class="fw-semibold text-dark cargo-name">
+                                                        {{ cargo }}
+                                                    </td>
+                                                    
+                                                    <td>
+                                                        {% with est_cargo="estado_"|addstr:cargo.id %}
+                                                            {% for field in form %}
+                                                                {% if field.name == est_cargo %}
+                                                                    <div class="state-select-container">
+                                                                        {{ field }}
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endwith %}
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center p-4 text-muted fst-italic">
+                                                        <i class="bi bi-info-circle me-1"></i> No hay cargos configurados en el sistema.
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 border-top pt-3">
+                    <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-light border"><i class="bi bi-x-circle"></i> Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i> {% if id_persona > 0 %}Actualizar Cambios{% else %}Guardar Registro{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputId = document.getElementById('txtIdentificacion');
+    const params = new URLSearchParams(window.location.search);
+    const duplicateError = {% if status == 'error_duplicado' %}true{% else %}params.get('status') === 'error_duplicado'{% endif %};
+    
+    if (inputId) inputId.focus();
+
+    if (duplicateError) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Identificación Duplicada',
+            text: 'Este número ya pertenece a otro registro.',
+            confirmButtonColor: 'rgb(75, 93, 220)'
+        }).then(() => { if(inputId) { inputId.focus(); inputId.select(); } });
+    }
+    window.history.replaceState({}, document.title, window.location.pathname);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // === 1. LÓGICA DE CONTROL DE ESTADOS DE CARGOS ===
+    const rows = document.querySelectorAll('.cargo-row');
+    
+    rows.forEach(row => {
+        const checkbox = row.querySelector('.cargo-checkbox-wrapper input[type="checkbox"]');
+        const selectEstado = row.querySelector('.state-select-container select');
+        
+        if (checkbox && selectEstado) {
+            // Función para alternar el estado del select según el checkbox
+            const toggleSelectState = () => {
+                if (checkbox.checked) {
+                    selectEstado.removeAttribute('disabled');
+                    row.classList.add('table-success-light'); // Opcional: Resaltar fila seleccionada
+                } else {
+                    selectEstado.setAttribute('disabled', 'disabled');
+                    row.classList.remove('table-success-light');
+                }
+            };
+
+            // Evaluar estado inicial (útil en modo Edición)
+            toggleSelectState();
+
+            // Escuchar cambios del usuario en tiempo real
+            checkbox.addEventListener('change', toggleSelectState);
+        }
+    });
+
+    // === 2. FILTRO DE BÚSQUEDA EN TIEMPO REAL ===
+    const searchInput = document.getElementById('searchCargo');
+    const tableRows = document.querySelectorAll('#tableCargos tbody .cargo-row');
+    const totalCountSpan = document.getElementById('totalCargos');
+
+    if (totalCountSpan) totalCountSpan.textContent = tableRows.length;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                const cargoText = row.querySelector('.cargo-name').textContent.toLowerCase();
+                const unitText = row.querySelector('.cargo-unit').textContent.toLowerCase();
+
+                if (cargoText.includes(searchTerm) || unitText.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (totalCountSpan) totalCountSpan.textContent = visibleCount;
+        });
+    }
+});
+</script>
+{% endblock %}

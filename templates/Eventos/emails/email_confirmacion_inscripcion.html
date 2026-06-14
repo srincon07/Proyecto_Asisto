@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Confirmación de Inscripción</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333333; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 680px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 10px; }
+    .header { text-align: center; padding-bottom: 16px; border-bottom: 1px solid #dddddd; }
+    .header h1 { margin: 0; font-size: 24px; color: #1d4ed8; }
+    .content { padding-top: 18px; line-height: 1.6; }
+    .detail { margin: 20px 0; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .detail p { margin: 8px 0; }
+    .footer { font-size: 13px; color: #6b7280; padding-top: 18px; border-top: 1px solid #e2e8f0; }
+    .strong { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Confirmación de Inscripción</h1>
+    </div>
+    <div class="content">
+      <p>Hola {{ persona.nombres }} {{ persona.apellidos }},</p>
+      <p>Hemos recibido y confirmado tu inscripción al evento <strong>{{ actividad.nombre_evento }}</strong>.</p>
+      <div class="detail">
+        <p><span class="strong">Fecha y hora:</span><br />{{ actividad.fecha_hora_inicio|date:"Y-m-d H:i" }} - {{ actividad.fecha_hora_fin|date:"Y-m-d H:i" }}</p>
+        <p><span class="strong">Lugar:</span><br />{{ actividad.lugar_desarrollo|default:"Por definir" }}</p>
+      </div>
+      <p>Te agradecemos por tu interés en participar. Si necesitas más información, por favor comunícate con el equipo organizador.</p>
+      <p>Por favor conserva este correo como comprobante de tu inscripción.</p>
+    </div>
+    <div class="footer">
+      <p>Atentamente,</p>
+      <p>Sistema Asisto</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+
+{% block title %}Agenda Institucional{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <!-- Encabezado de la Agenda -->
+    <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+            <h2 class="m-0 text-primary h4 fw-bold">Agenda Institucional</h2>
+        </div>
+        <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-primary d-flex align-items-center shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i> Nueva Actividad
+        </a>
+    </div>
+
+    <!-- Tabla de Contenido -->
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Evento / Responsable</th>
+                            <th>Línea</th>
+                            <th>Programación</th>
+                            <th class="text-center">Estado / Asistencia</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in actividades %}
+                        <tr class="{{ row.fila_class }}">
+                            <td class="ps-3">
+                                <strong>{{ row.nombre_evento }}</strong><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-person-badge"></i> {{ row.id_responsable.nombres|default:"No asignado" }} {{ row.id_responsable.apellidos|default:"" }}
+                                </small>
+                            </td>
+                            <td><span class="badge border text-dark bg-light">{{ row.id_tipo_actividad.nombre }}</span></td>
+                            <td>
+                                <!-- Filtro de fecha nativo de Django para dar formato "d/m h:i A" -->
+                                <div class="small"><b>Inicia:</b> {{ row.fecha_hora_inicio|date:"d/m h:i A" }}</div>
+                                <div class="small"><b>Termina:</b> {{ row.fecha_hora_fin|date:"d/m h:i A" }}</div>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge {{ row.badge_class }} p-2">
+                                    {% if row.estado_txt == 'EN CURSO' %}
+                                        <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
+                                    {% endif %}
+                                    {{ row.estado_txt }}
+                                </span><br>
+                                
+                                {% if row.asistencia_url %}
+                                    <button type="button" 
+                                            class="btn btn-dark py-0 btn-qr" 
+                                            style="font-size: 0.7rem; padding: 2px 8px;"
+                                            data-evento="{{ row.nombre_evento|escape }}"
+                                            data-link="{{ row.asistencia_url|escape }}">
+                                        <i class="bi bi-qr-code-scan"></i> {{ row.aux_btn_txt }}
+                                    </button>
+                                {% else %}
+                                    {% if row.estado_txt == 'PROGRAMADA' and row.requiere_preregistro %}
+                                        <small class="text-muted d-block" style="font-size: 0.65rem;">
+                                            <i class="bi bi-lock-fill"></i> Preregistro cerrado
+                                        </small>
+                                    {% elif row.estado_txt == 'PROGRAMADA' and not row.requiere_preregistro %}
+                                        <small class="text-muted d-block" style="font-size: 0.65rem;">
+                                            <i class="bi bi-lock-fill"></i> Esperando Inicio...
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted d-block" style="font-size: 0.65rem;">
+                                            <i class="bi bi-slash-circle"></i> Concluido
+                                        </small>
+                                    {% endif %}
+                                {% endif %}
+
+                                <a href="{% url 'Eventos:interfaz_escaneo_asistencia' row.id %}" class="btn btn-sm btn-dark" 
+                                            style="font-size: 0.7rem; padding: 2px 8px;">
+                                    <i class="bi bi-camera-fill"></i>
+                                </a>
+
+                            </td>
+
+                            <td class="text-center">
+                                <div class="btn-group shadow-sm">
+                                    <a href="{% url 'Eventos:panel_asistentes_actividad' row.id %}" class="btn btn-sm btn-info text-white" title="Ver Asistentes">
+                                        <i class="bi bi-people-fill"></i>
+                                    </a>
+                                    <a href="{% url 'Eventos:editar_actividad' row.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button onclick="confirmarEliminacion('{{ row.id }}', '{{ row.nombre_evento|escapejs }}', '{{ row.estado_txt }}')" 
+                                            class="btn btn-sm btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Formulario oculto por cada fila para procesar el borrado seguro via POST -->
+                                <form id="form-eliminar-{{ row.id }}" action="{% url 'Eventos:eliminar_actividad' row.id %}" method="POST" style="display: none;">
+                                    {% csrf_token %}
+                                </form>
+                            </td>
+
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center p-4 text-muted">No hay eventos programados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+function verQR(evento, link) {
+    if (!link) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Enlace no disponible',
+            text: 'No se pudo construir la URL de asistencia.',
+            confirmButtonText: 'Cerrar'
+        });
+        return;
+    }
+
+    const imgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(link)}`;
+
+    Swal.fire({
+        title: 'Asistencia: ' + evento,
+        html: `
+            <p>Escanee para registrarse:</p>
+            <img src="${imgUrl}" alt="Código QR de asistencia" width="240" height="240" class="img-fluid mb-3" />
+            <a href="${link}" target="_blank" class="d-block text-decoration-none text-primary">${link}</a>
+        `,
+        confirmButtonText: 'Cerrar'
+    });
+}
+
+function confirmarEliminacion(id, nombre, estado) {
+    if (estado !== 'PROGRAMADA') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Acción denegada',
+            text: `No se puede eliminar la actividad "${nombre}" porque ya está ${estado.toLowerCase()}.`,
+            confirmButtonColor: '#3085d6'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: '¿Eliminar actividad?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Ejecutamos el envío del formulario POST correspondiente
+            document.getElementById(`form-eliminar-${id}`).submit();
+        }
+    });
+}
+
+// Escucha de notificaciones enviadas desde Django mediante messages framework
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-qr').forEach(function(button) {
+        button.addEventListener('click', function() {
+            verQR(this.dataset.evento, this.dataset.link);
+        });
+    });
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                title: "{% if message.tags == 'error' %}Acción Bloqueada{% else %}¡Operación Exitosa!{% endif %}",
+                text: "{{ message }}",
+                timer: 3000,
+                showConfirmButton: {% if message.tags == 'error' %}true{% else %}false{% endif %}
+            });
+        {% endfor %}
+    {% endif %}
+});
+</script>
+
+{% endblock %}

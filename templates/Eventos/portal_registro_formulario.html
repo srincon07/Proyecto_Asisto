@@ -1,0 +1,334 @@
+{% extends "layout.html" %}
+{% block title %}
+    Registro de Asistencia - {{ actividad.nombre_evento }}
+{% endblock %}
+
+
+{% block content %}
+    <header class="portal-header shadow-sm">
+        <div class="portal-tagline">
+            <i class="bi bi-award-fill me-1"></i> {{ actividad.id_tipo_actividad.nombre_tipo_actividad|upper|default:"ACTIVIDAD PROGRAMADA" }}
+        </div>
+        <h1 class="portal-main-title">Registro de Asistencia</h1>
+        <p class="portal-sub-title">{{ actividad.nombre_evento }}</p>
+        
+        <div class="info-grid">
+            <div class="info-card-item">
+                <i class="bi bi-person-badge-fill"></i>
+                <div class="info-card-text">
+                    <span class="info-card-label">Responsable</span>
+                    <span class="info-card-value">{{ actividad.id_responsable|default:"Por asignar" }}</span>
+                </div>
+            </div>
+            <div class="info-card-item">
+                <i class="bi bi-calendar3"></i>
+                <div class="info-card-text">
+                    <span class="info-card-label">Fecha del Evento</span>
+                    <span class="info-card-value">{{ actividad.fecha_hora_inicio|date:"d / m / Y" }}</span>
+                </div>
+            </div>
+            <div class="info-card-item">
+                <i class="bi bi-clock-history"></i>
+                <div class="info-card-text">
+                    <span class="info-card-label">Horario</span>
+                    <span class="info-card-value">{{ actividad.fecha_hora_inicio|time:"h:i A" }} a {{ actividad.fecha_hora_fin|time:"h:i A" }}</span>
+                </div>
+            </div>
+            <div class="info-card-item">
+                <i class="bi bi-geo-alt"></i>
+                <div class="info-card-text">
+                    <span class="info-card-label">Lugar</span>
+                    <span class="info-card-value">{{ actividad.lugar_desarrollo|default:"Por asignar" }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mb-5 overlap-container">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+
+                {% if enlace_activo %}
+
+                <!-- Card Central de Flujo -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" id="mainCard">
+                    <h4 class="fw-bold text-center text-dark mb-2">
+                        {% if modo_formulario == "PREREGISTRO" %}
+                            Preregistro al Evento
+                        {% elif modo_formulario == "AUTO_CONFIRMACION" %}
+                            Confirmar mi Asistencia
+                        {% else %}
+                            Registro de Asistencia
+                        {% endif %}
+                    </h4>
+                    
+                    {% if modo_formulario == "AUTO_CONFIRMACION" %}
+                        <div class="alert alert-info py-2 text-center small rounded-3 mb-4">
+                            <i class="bi bi-info-circle-fill me-2"></i> 
+                            Ya te encuentras inscrito. Introduce tu identificación para confirmar tu ingreso al auditorio.
+                        </div>
+                    {% else %}
+                        <p class="text-muted small text-center mb-4">Por favor complete los datos para el registro en la actividad.</p>
+                    {% endif %}
+                    <form id="formAsistencia">
+                        {% csrf_token %}
+                        <!-- Campo Oculto para controlar la acción interna -->
+                        <input type="hidden" name="accion" id="inputAccion" value="registro_inicial">
+
+                        <!-- PASO 1: Ingreso de Identificación (Siempre Visible al inicio) -->
+                        <div id="bloqueIdentificacion">
+                            <h5 class="fw-bold text-secondary mb-3 text-center">Ingrese su Identificación</h5>
+                            <div class="form-floating mb-3">
+                                <input type="text" name="documento" class="form-control" id="fDoc" placeholder="ID" required>
+                                <label for="fDoc"><i class="bi bi-card-text me-2"></i>Documento de Identidad</label>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnSiguiente">
+                                Siguiente <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        </div>
+
+                        <!-- CONDICIONAL A: Solicitar PIN en vivo (Oculto) -->
+                        <div id="bloquePin" style="display: none;">
+                            <h5 class="fw-bold text-warning mb-2 text-center"><i class="bi bi-shield-lock-fill me-2"></i>Confirmar Presencia</h5>
+                            <p class="text-muted small text-center mb-4">Hola <span id="txtNombrePin" class="fw-bold text-dark"></span>, introduce el PIN de verificación proyectado en la sala.</p>
+                            <div class="form-floating mb-4">
+                                <input type="text" name="pin_evento" class="form-control text-center fs-3 fw-bold" id="fPin" placeholder="0000" maxlength="6" autocomplete="off">
+                                <label for="fPin">Código PIN</label>
+                            </div>
+                            <button type="button" class="btn btn-warning btn-lg w-100 rounded-3 shadow fw-bold text-dark" id="btnValidarPin">
+                                <i class="bi bi-patch-check-fill me-2"></i>Validar Presencia
+                            </button>
+                        </div>
+
+                        <!-- CONDICIONAL B: Completar Datos del Perfil (Oculto) -->
+                        <div id="bloqueCamposRegistro" style="display: none;">
+                            <h5 class="fw-bold text-secondary mb-3 text-center">Complete su Perfil</h5>
+                            
+                            <!-- Nombres -->
+                            <div class="form-floating mb-3">
+                                <input type="text" name="nombre" class="form-control" id="fNom" placeholder="Nombres" required>
+                                <label for="fNom"><i class="bi bi-person me-2"></i>Nombre(s)</label>
+                            </div>
+                            
+                            <!-- Apellidos -->
+                            <div class="form-floating mb-3">
+                                <input type="text" name="apellido" class="form-control" id="fApe" placeholder="Apellidos" required>
+                                <label for="fApe"><i class="bi bi-person-bounding-box me-2"></i>Apellido(s)</label>
+                            </div>
+                            
+                            <!-- Correo -->
+                            <div class="form-floating mb-3">
+                                <input type="email" name="correo" class="form-control" id="fMail" placeholder="Correo" required>
+                                <label for="fMail"><i class="bi bi-envelope me-2"></i>Correo Electrónico</label>
+                            </div>
+                            
+                            <!-- Teléfono -->
+                            <div class="form-floating mb-3">
+                                <input type="tel" name="telefono" class="form-control" id="fTel" placeholder="Teléfono">
+                                <label for="fTel"><i class="bi bi-telephone me-2"></i>Teléfono</label>
+                            </div>
+                            
+                            <!-- Empresa/Dependencia -->
+                            <div class="form-floating mb-3">
+                                <input type="text" name="organizacion_origen" class="form-control" id="fOrg" placeholder="Empresa/Dependencia">
+                                <label for="fOrg"><i class="bi bi-building me-2"></i>Empresa o Dependencia</label>
+                            </div>
+                            
+                            <!-- Discapacidad -->
+                            <div class="mb-3">
+                                <label for="fDiscapacidad" class="form-label fw-semibold"><i class="bi bi-heart-pulse me-2"></i>Discapacidad</label>
+                                <select name="discapacidad" id="fDiscapacidad" class="form-select">
+                                    <option value="">-- Ninguna --</option>
+                                    {% for d in discapacidades %}
+                                    <option value="{{ d.id }}">{{ d.nombre_discapacidad }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+
+
+                            <!-- Género -->
+                            <div class="mb-3">
+                                <label for="fGenero" class="form-label fw-semibold"><i class="bi bi-person-circle me-2"></i>Género</label>
+                                <select name="genero" id="fGenero" class="form-select" required>
+
+                                    <option value="">-- Seleccione --</option>
+                                    {% for g in generos %}
+                                    <option value="{{ g }}">{{ g }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fCargo" class="form-label fw-semibold">
+                                    <i class="bi bi-briefcase me-2"></i>Cargo Institucional
+                                </label>
+                                <select name="cargo" id="fCargo" class="form-select" required>
+                                    <option value="">-- Seleccione --</option>
+                                </select>
+                            </div>
+                            
+                            <button type="button" class="btn btn-success btn-lg w-100 rounded-3 shadow fw-bold" id="btnRegistrarFinal">
+                                <i class="bi bi-check-circle-fill me-2"></i>Finalizar Registro
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+                {% else %}
+
+                <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
+                        <i class="bi bi-exclamation-octagon-fill text-danger display-1 mb-3"></i>
+                        <h4 class="fw-bold text-dark mb-2">Acceso No Disponible</h4>
+                        <p class="text-muted small">
+                            Lo sentimos, el enlace de autoregistro para esta actividad no se encuentra activo o el tiempo límite de tolerancia para confirmar asistencia ya ha expirado.
+                        </p>
+                        <hr class="text-muted my-3">
+                        <p class="text-secondary font-monospace small m-0">Código de Control: TIMEOUT_OR_EXPIRED</p>
+                    </div>
+
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Lógica de Control de Flujo con Vanilla JS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const btnValidarPin = document.getElementById('btnValidarPin');
+            const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+            
+            const bIdentificacion = document.getElementById('bloqueIdentificacion');
+            const bPin = document.getElementById('bloquePin');
+            const bRegistro = document.getElementById('bloqueCamposRegistro');
+            
+            const fDoc = document.getElementById('fDoc');
+            const inputAccion = document.getElementById('inputAccion');
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // --- PASO 1: VERIFICAR IDENTIFICACIÓN ---
+            btnSiguiente.addEventListener('click', function() {
+                const docValue = fDoc.value.trim();
+                if(!docValue) {
+                    Swal.fire('Atención', 'Por favor ingrese su número de documento.', 'warning');
+                    return;
+                }
+
+                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?documento=${docValue}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'YA_CONFIRMADO') {
+                        Swal.fire('Registro Completo', data.message, 'info').then(() => location.reload());
+                    } 
+                    else if (data.status === 'SOLO_REGISTRADO') {
+                        Swal.fire('Ya Registrado', data.message, 'info').then(() => location.reload());
+                    } 
+                    else if (data.status === 'SOLICITAR_PIN') {
+                        document.getElementById('txtNombrePin').innerText = data.nombre;
+                        inputAccion.value = 'procesar_pin';
+                        bIdentificacion.style.display = 'none';
+                        bPin.style.display = 'block';
+                    } 
+                    else if (data.status === 'RECHAZAR_NUEVO_REGISTRO') {
+                        // Manejo del bloqueo estricto para eventos con preregistro obligatorio en curso
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Acceso Denegado',
+                            text: 'Esta actividad requería un preregistro obligatorio. No se admiten inscripciones nuevas mientras el evento está en curso.',
+                            confirmButtonText: 'Entendido'
+                        }).then(() => location.reload());
+                    }
+                    else if (data.status === 'COMPLETAR_REGISTRO' || data.status === 'NUEVO_REGISTRO') {
+                        // Flujo de inscripción autorizado (Casos válidos de Programada o En curso sin preregistro)
+                        inputAccion.value = 'registrar_nuevo';
+                        bIdentificacion.style.display = 'none';
+                        bRegistro.style.display = 'block';
+
+                        // --- POBLAR SELECT DE CARGOS DINÁMICAMENTE ---
+                        const selectCargo = document.getElementById('fCargo');
+                        // Limpiamos las opciones anteriores dejando solo el placeholder
+                        selectCargo.innerHTML = '<option value="">-- Seleccione --</option>';
+                        
+                        if (data.cargos && data.cargos.length > 0) {
+                            data.cargos.forEach(cargo => {
+                                const opt = document.createElement('option');
+                                opt.value = cargo.id;
+                                opt.textContent = cargo.nombre;
+                                selectCargo.appendChild(opt);
+                            });
+                            
+                            // Si la regla de negocio devolvió exactamente un solo cargo (como el Cargo ID 1 por defecto), lo pre-seleccionamos
+                            if (data.cargos.length === 1) {
+                                selectCargo.value = data.cargos[0].id;
+                            }
+                        }
+                        // ---------------------------------------------
+                        
+                        if(data.status === 'COMPLETAR_REGISTRO') {
+                            document.getElementById('fNom').value = data.nombre;
+                            document.getElementById('fApe').value = data.apellido;
+                            document.getElementById('fMail').value = data.correo;
+                            document.getElementById('fOrg').value = data.organizacion_origen;
+                            document.getElementById('fTel').value = data.telefono || '';
+                            document.getElementById('fGenero').value = data.genero || '';
+                            document.getElementById('fDiscapacidad').value = data.discapacidad || '';
+                        } else {
+                            document.getElementById('fNom').value = '';
+                            document.getElementById('fApe').value = '';
+                            document.getElementById('fMail').value = '';
+                            document.getElementById('fOrg').value = '';
+                            document.getElementById('fTel').value = '';
+                            document.getElementById('fGenero').value = '';
+                            document.getElementById('fDiscapacidad').value = '';
+                        }
+                    }
+                });
+            });
+
+            // --- PASO 2: ENVIAR VALIDACIÓN DE PIN ---
+            btnValidarPin.addEventListener('click', function() {
+                const formData = new FormData(document.getElementById('formAsistencia'));
+                enviarFormulario(formData);
+            });
+
+            // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO ---
+            btnRegistrarFinal.addEventListener('click', function() {
+                const nombre = document.getElementById('fNom').value;
+                const apellido = document.getElementById('fApe').value;
+                const genero = document.getElementById('fGenero').value;
+                const correo = document.getElementById('fMail').value;
+                const cargo = document.getElementById('fCargo').value; // Validar el cargo institucional
+
+                if(!nombre || !apellido || !genero || !correo || !cargo) {
+                    Swal.fire('Campos requeridos', 'Por favor complete nombre, apellido, correo, género y cargo.', 'warning');
+                    return;
+                }
+                const formData = new FormData(document.getElementById('formAsistencia'));
+                enviarFormulario(formData);
+            });
+
+            
+            // Función reutilizable para despachar datos por POST
+            function enviarFormulario(formData) {
+                fetch(`{% url 'Eventos:procesar_asistencia_ajax' actividad.id %}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': token },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        Swal.fire('Asistencia registrada correctamente.', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

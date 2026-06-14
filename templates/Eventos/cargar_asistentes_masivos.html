@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-dark text-white p-4 rounded-top-4">
+                    <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-arrow-up-fill text-info me-2"></i>Carga Masiva de Asistentes</h4>
+                    <small class="text-white-50">Actividad: {{ actividad.nombre_evento }}</small>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-warning small rounded-3 d-flex align-items-start" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill h5 me-3 text-warning"></i>
+                        <div>
+                            <strong>Instrucciones Importantes:</strong> El archivo cargado debe ser un archivo de texto plano delimitado por comas (.csv). El sistema validará de manera automática las identificaciones duplicadas para evitar inscripciones dobles a este evento.
+                        </div>
+                    </div>
+
+                    <!-- Tabla informativa de campos -->
+                    <h6 class="fw-bold text-secondary mb-2">Estructura esperada del CSV:</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-bordered text-center small bg-light m-0">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>identificacion</th>
+                                    <th>nombres</th>
+                                    <th>apellidos</th>
+                                    <th>correo</th>
+                                    <th>telefono</th>
+                                    <th>empresa o dependencia</th>
+                                    <th>genero</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">1014...</td>
+                                    <td class="text-muted">Juan</td>
+                                    <td class="text-muted">Pérez</td>
+                                    <td class="text-muted">juan@mail.com</td>
+                                    <td class="text-muted">123456789</td>
+                                    <td class="text-muted">Gobernación</td>
+                                    <td class="text-muted">Masculino</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="{{ form.archivo_csv.id_for_label }}" class="form-label fw-semibold text-dark">{{ form.archivo_csv.label }}</label>
+                            <input type="file" name="archivo_csv" class="form-control form-control-lg rounded-3" id="{{ form.archivo_csv.id_for_label }}" required>
+                            <div class="form-text text-muted small">{{ form.archivo_csv.help_text }}</div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-light border btn-lg w-50 rounded-3">Cancelar</a>
+                            <button type="submit" class="btn btn-info btn-lg w-50 rounded-3 fw-bold shadow-sm">
+                                <i class="bi bi-cloud-upload-fill me-2"></i> Procesar Carga
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

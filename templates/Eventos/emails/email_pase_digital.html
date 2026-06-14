@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }
+        .card { background: #fff; max-width: 500px; margin: 0 auto; border-radius: 8px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #0d6efd; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        .token { background: #e9ecef; font-family: monospace; font-size: 20px; font-weight: bold; text-align: center; padding: 10px; border-radius: 4px; letter-spacing: 2px; color: #0d6efd; margin: 20px 0; }
+        .footer { font-size: 11px; color: #777; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h2 style="color: #0d6efd; margin: 0;">¡Registro Confirmado!</h2>
+        </div>
+        <p>Hola, <strong>{{ persona.nombres }} {{ persona.apellidos }}</strong>:</p>
+        <p>Te has registrado exitosamente en la actividad: <strong>{{ actividad.nombre_evento }}</strong>.</p>
+        
+        <p>A continuación, te presentamos tu <strong>Pase Único de Asistencia</strong>. Muestra este código o búscalo en tu celular al ingresar al evento:</p>
+        
+        
+        <div style="text-align: center; margin: 25px 0;">
+            <p style="font-weight: bold; mb-2">Presenta este código QR en la entrada del evento:</p>
+            
+            <img src="cid:qr_code" alt="Código QR de Acceso" style="width: 200px; height: 200px; border: 1px solid #ddd; padding: 5px; background-color: #fff;" />
+            
+            <div class="token">{{ codigo_pase }}</div>
+        </div>
+        
+        <p><strong>Detalles del Evento:</strong></p>
+        <ul>
+            <li><strong>Fecha y Hora:</strong> {{ actividad.fecha_hora_inicio|date:"Y-m-d H:i" }}</li>
+            <li><strong>Lugar:</strong> {{ actividad.lugar_desarrollo|default:"Por definir" }}</li>
+        </ul>
+        
+        <div class="footer">
+            Este es un correo automático, por favor no respondas a este mensaje.
+        </div>
+    </div>
+</body>
+</html>

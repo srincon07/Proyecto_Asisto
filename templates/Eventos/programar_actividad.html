@@ -1,0 +1,285 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow border-0 mx-auto" style="max-width: 900px;">
+        <div class="card-header custom-header text-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="m-0 fw-bold"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h4>
+            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+        </div>
+        
+        <div class="card-body p-4">
+            <form id="formEvento" method="POST">
+                {% csrf_token %}
+
+                <div class="row g-4">
+                    <!-- Bloque Jerárquico Izquierdo -->
+                    <div class="col-md-6 border-end">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">1. Objetivo Estratégico</label>
+                            <select id="obj" class="form-select border-primary" onchange="cargarLineas(this.value)" required>
+                                <option value="">Seleccione Objetivo...</option>
+                                {% for o in objetivos %}
+                                    <option value="{{ o.id }}" {% if evento and evento.id_tipo_actividad.id_linea.id_objetivo_id == o.id %}selected{% endif %}>
+                                        {{ o.nombre_objetivo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">2. Línea de Acción</label>
+                            <select id="lin" class="form-select" onchange="cargarTipos(this.value)" required {% if not evento %}disabled{% endif %}>
+                                <option value="">Seleccione Línea...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">3. Tipo de Actividad</label>
+                            {{ form.id_tipo_actividad }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase text-muted">PIN de Confirmación</label>
+                            {{ form.pin_confirmacion }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">Nombre del Evento</label>
+                            {{ form.nombre_evento }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">Responsable</label>
+                            {{ form.id_responsable }}
+                        </div>
+                    </div>
+
+                    <!-- Bloque Datos del Evento Derecho -->
+                    <div class="col-md-6">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase">Lugar de Desarrollo</label>
+                            {{ form.lugar_desarrollo }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-uppercase text-muted">Inicio</label>
+                                {{ form.fecha_hora_inicio }}
+                                {% if form.fecha_hora_inicio.errors %}
+                                    <div class="text-danger small mt-1">{{ form.fecha_hora_inicio.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-uppercase text-muted">Fin</label>
+                                {{ form.fecha_hora_fin }}
+                                {% if form.fecha_hora_fin.errors %}
+                                    <div class="text-danger small mt-1 fw-bold">{{ form.fecha_hora_fin.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Switch de Preregistro nativo de Django -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {% if evento and evento.asistencias.exists %}
+                                    {{ form.requiere_preregistro }}
+                                    <label class="form-check-label fw-bold text-muted" for="id_requiere_preregistro">¿Requiere Preregistro previo?</label>
+                                    <div class="form-text text-warning small">
+                                        <i class="bi bi-exclador-triangle-fill me-1"></i> No se puede modificar: Este evento ya cuenta con asistentes registrados.
+                                    </div>
+                                    <input type="hidden" name="requiere_preregistro" value="{% if evento.requiere_preregistro %}on{% else %}off{% endif %}">
+                                {% else %}
+                                    {{ form.requiere_preregistro }}
+                                    <label class="form-check-label fw-bold" for="id_requiere_preregistro">¿Requiere Preregistro previo?</label>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contenedor dinámico SI REQUIERE PREREGISTRO -->
+                        <div id="contenedor-preregistro" style="display: none;" class="p-3 bg-light rounded border mb-3">
+                            <div class="mb-3" id="div-minutos-cierre">
+                                <label class="form-label small fw-bold">¿Cuántos minutos antes del inicio debe cerrar el preregistro?</label>
+                                {{ form.minutos_anticipacion_cierre }}
+                                <div class="form-text text-muted">Coloque "0" si permite el preregistro hasta el último minuto antes de iniciar.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.permite_qr_invertido }}
+                                <label class="form-check-label small fw-bold" for="id_permite_qr_invertido">Generar pase digital (QR Invertido) al asistente</label>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor dinámico SI NO REQUIERE PREREGISTRO -->
+                        <div id="contenedor-sin-preregistro" class="p-3 bg-light rounded border mb-3">
+                            <div class="form-check form-switch mb-2">
+                                {{ form.confirmacion_asistencia_temporal }}
+                                <label class="form-check-label fw-bold" for="id_asistencia_temporal">¿Limitar el tiempo de escaneo del QR en vivo?</label>
+                            </div>
+                            <div id="contenedor-tiempo-temporal" style="display: none;" class="mt-2">
+                                <label for="id_minutos_duracion" class="form-label small text-muted">¿Cuántos minutos permanecerá activo el QR desde el inicio del evento?</label>
+                                <div class="input-group input-group-sm" style="max-width: 200px;">
+                                    {{ form.minutos_duracion_enlace }}
+                                    <span class="input-group-text">minutos</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if cargue_masivo %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-uppercase">Cargue Masivo</label>
+                                <a href="{% url 'Eventos:importar_asistentes_csv' actividad_id=evento.id %}" class="btn btn-light border text-secondary">Cargar Archivo</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end border-top pt-4 mt-3">
+                    <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-light border text-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                        <i class="bi bi-save me-2"></i> {% if evento %}Actualizar Actividad{% else %}Guardar Actividad{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+
+    <script>
+    $(document).ready(function() {
+        // Inicializar buscador Select2 nativo de Django
+        $('#select-responsable').select2({
+            placeholder: "Escriba para buscar...",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Lógica de edición: disparar cascada inicial si existe una instancia previa
+        {% if evento %}
+            const pre_linea = "{{ evento.id_tipo_actividad.id_linea_id }}";
+            const pre_tipo = "{{ evento.id_tipo_actividad_id }}";
+            const objVal = $('#obj').val();
+            if(objVal) cargarLineas(objVal, pre_linea, pre_tipo);
+        {% endif %}
+    });
+
+    async function cargarLineas(id, selectDefault = "", tipoDefault = "") {
+        if(!id) return;
+        const lin = document.getElementById('lin');
+        lin.disabled = false;
+        lin.innerHTML = '<option>Cargando...</option>';
+        
+        // Apuntamos al endpoint estructurado en Django
+        const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?objetivo_id=${id}`);
+        const data = await resp.json();
+        
+        lin.innerHTML = '<option value="">Seleccione Línea...</option>';
+        data.forEach(l => {
+            const sel = (l.id == selectDefault) ? 'selected' : '';
+            lin.innerHTML += `<option value="${l.id}" ${sel}>${l.nombre_linea}</option>`;
+        });
+        
+        if(selectDefault) cargarTipos(selectDefault, tipoDefault);
+    }
+
+    async function cargarTipos(id, selectDefault = "") {
+        if(!id) return;
+        const tip = document.getElementById('tip');
+        tip.disabled = false;
+        tip.innerHTML = '<option>Cargando...</option>';
+        
+        // Apuntamos al endpoint estructurado en Django
+        const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?linea_id=${id}`);
+        const data = await resp.json();
+        
+        tip.innerHTML = '<option value="">Seleccione Tipo...</option>';
+        data.forEach(t => {
+            const sel = (t.id == selectDefault) ? 'selected' : '';
+            tip.innerHTML += `<option value="${t.id}" ${sel}>${t.nombre} (${t.modalidad})</option>`;
+        });
+    }
+
+    // Captura de mensajes flash de Django a través de SweetAlert2
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                icon: "{{ message.tags }}", // 'success', 'error', etc.
+                title: '¡Operación Exitosa!',
+                text: "{{ message }}",
+                timer: 2500,
+                showConfirmButton: false
+            });
+        {% endfor %}
+    {% endif %}
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chkPreregistro = document.querySelector('[name="requiere_preregistro"]');
+        const divMinutos = document.getElementById('div-minutos-cierre');
+        const inputMinutos = document.querySelector('[name="minutos_anticipacion_cierre"]');
+
+        function evaluarVisibilidad() {
+            if (chkPreregistro.checked) {
+                divMinutos.style.display = 'block';
+                if(inputMinutos.value === "") inputMinutos.value = 0; // Valor por defecto amigable
+            } else {
+                divMinutos.style.display = 'none';
+                inputMinutos.value = 0; // Si se desmarca, se limpia a 0
+            }
+        }
+
+        // Escuchar los cambios del checkbox
+        chkPreregistro.addEventListener('change', evaluarVisibilidad);
+        
+        // Ejecutar al cargar la página (por si es una edición y ya estaba marcado)
+        evaluarVisibilidad();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chkPreregistro = document.getElementById('id_requiere_preregistro');
+        const chkQRInvertido = document.getElementById('id_permite_qr_invertido'); // <- Capturamos el switch de QR Invertido
+        
+        const divPreregistro = document.getElementById('contenedor-preregistro');
+        const divSinPreregistro = document.getElementById('contenedor-sin-preregistro');
+        
+        const chkTemporal = document.getElementById('id_asistencia_temporal');
+        const divTiempoTemporal = document.getElementById('contenedor-tiempo-temporal');
+
+        // Deshabilitar dinámicamente si el backend detectó asistencias previas
+        {% if evento and evento.asistencias.exists %}
+            chkPreregistro.disabled = true;
+        {% endif %}
+
+        function toggleFormulario() {
+            if (chkPreregistro.checked) {
+                divPreregistro.style.display = 'block';
+                divSinPreregistro.style.display = 'none'; 
+            } else {
+                divPreregistro.style.display = 'none';
+                divSinPreregistro.style.display = 'block';
+                
+                // REQUERIMIENTO 2: Si se desmarca Prerregistro, desactivamos QR invertido automáticamente
+                if (chkQRInvertido) {
+                    chkQRInvertido.checked = false;
+                }
+                
+                chkTemporal.checked = false;
+                divTiempoTemporal.style.display = 'none';
+            }
+        }
+
+        chkPreregistro.addEventListener('change', toggleFormulario);
+        chkTemporal.addEventListener('change', function() {
+            divTiempoTemporal.style.display = chkTemporal.checked ? 'block' : 'none';
+        });
+
+        // Ejecutar al cargar la página por si es una edición
+        toggleFormulario();
+    });
+    </script>
+{% endblock %}

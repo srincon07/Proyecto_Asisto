@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Sistema de Gestión de Actividades Organizacionales
+{% endblock %}
+    
+{% block content %}
+    <!-- Navbar Minimalista Corporativo -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <i class="bi bi-briefcase-fill text-info me-2"></i> GESTIÓN ORGANIZACIONAL
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'password_change' %}" class="btn btn-outline-warning btn-sm fw-bold" title="Cambiar Contraseña">
+                    <i class="bi bi-key-fill me-1"></i>
+                </a>
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm fw-bold" title="Cerrar Sesión">
+                        <i class="bi bi-box-arrow-left me-1"></i>
+                    </button>
+                </form>
+                <span class="navbar-text small text-uppercase d-none d-md-inline border-start ps-3">
+                    <i class="bi bi-shield-check text-success me-1"></i> Entorno Seguro (Django)
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección Hero Principal -->
+    <header class="hero-section text-center shadow-sm">
+        <div class="container my-3">
+            <h1 class="display-4 fw-bold mb-3">Control de Actividades y Objetivos</h1>
+            <p class="lead text-white-50 max-width-600 mx-auto mb-4">
+                Planifique los Objetivos Estratégicos de la organización, defina las líneas de acción y coordine el despliegue operativo de las actividades asignando responsables en tiempo real.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-light btn-lg px-4">
+                    <i class="bi bi-diagram-3 me-2"></i> Estructura Estratégica
+                </a>
+                <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-warning btn-lg fw-bold px-4 shadow text-dark">
+                    <i class="bi bi-people-fill me-2"></i> Gestión de Personal
+                </a>
+                <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-info btn-lg fw-bold px-4 shadow text-dark">
+                    <i class="bi bi-calendar3 me-2"></i> Ver Agenda de Actividades
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Panel de Estadísticas Breves (Estructura + PersonasApp) -->
+    <section class="container" style="margin-top: -30px;">
+        <div class="row g-4 justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
+                    <h3 class="fw-bold text-success m-0">{{ total_en_curso }}</h3>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">En Ejecución Ahora</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
+                    <h3 class="fw-bold text-primary m-0">{{ total_programadas }}</h3>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Tareas Planificadas</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
+                    <h3 class="fw-bold text-warning m-0">{{ total_responsables }}</h3>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Personal Asignado</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Módulos de la Plataforma (Grid de 4 Columnas) -->
+    <main class="container my-5 py-3">
+        <h3 class="text-center fw-bold text-secondary mb-5">Módulos de Control Operativo</h3>
+        
+        <div class="row g-4 justify-content-center">
+            <!-- Módulo: Estructura Estratégica -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card" onclick="location.href='{% url 'EstructuraApp:gestion_estructura' %}'">
+                    <div class="card-body d-flex flex-column">
+                        <div class="icon-box bg-purple-subtle text-purple mb-3" style="background-color: #f3e5f5; color: #8e24aa;">
+                            <i class="bi bi-ui-checks h3 m-0"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark">Estructura Estratégica</h4>
+                        <p class="card-text text-muted small flex-grow-1">
+                            Defina el marco de trabajo estratégico. Clasifique los Objetivos de la organización y sus respectivas Líneas de Acción antes de delegar la ejecución operativa.
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap mt-2">
+                            <span class="badge bg-light text-dark border"><i class="bi bi-crosshair text-danger"></i> {{ total_objetivos }} Objetivos</span>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-signpost-split text-primary"></i> {{ total_lineas }} Líneas</span>
+                        </div>
+                        <div class="fw-bold small mt-3" style="color: #8e24aa;">Configurar Estructura →</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo: Gestión de Personal (NUEVO) -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card" onclick="location.href='{% url 'PersonasApp:lista_personas' %}'">
+                    <div class="card-body d-flex flex-column">
+                        <div class="icon-box bg-warning-subtle text-warning mb-3" style="background-color: #fff8e1; color: #f57f17;">
+                            <i class="bi bi-people-fill h3 m-0"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark">Gestión de Personal</h4>
+                        <p class="card-text text-muted small flex-grow-1">
+                            Administre el talento humano de la institución. Registre nuevos colaboradores, asigne perfiles organizacionales y consulte el historial de participaciones.
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap mt-2">
+                            <span class="badge bg-light text-dark border"><i class="bi bi-person-badge text-warning"></i> {{ total_responsables }} Colaboradores</span>
+                        </div>
+                        <div class="fw-bold small mt-3" style="color: #f57f17;">Administrar Personal →</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo: Programador -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card" onclick="location.href='{% url 'Eventos:programar_actividad' %}'">
+                    <div class="card-body d-flex flex-column">
+                        <div class="icon-box bg-success-subtle text-success mb-3">
+                            <i class="bi bi-plus-circle-fill h3 m-0"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark">Programar Actividad</h4>
+                        <p class="card-text text-muted small flex-grow-1">
+                            Formulario inteligente de asignación. Vincula actividades directamente a los Objetivos organizacionales y designa líderes responsables provenientes de PersonasApp.
+                        </p>
+                        <div class="text-success fw-bold small mt-3">Registrar Actividad →</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo: Agenda -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card" onclick="location.href='{% url 'Eventos:lista_eventos' %}'">
+                    <div class="card-body d-flex flex-column">
+                        <div class="icon-box bg-primary-subtle text-primary mb-3">
+                            <i class="bi bi-calendar-range-fill h3 m-0"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark">Panel / Agenda</h4>
+                        <p class="card-text text-muted small flex-grow-1">
+                            Supervise el calendario global de actividades programadas. Controle los estados de ejecución en tiempo real y gestione los accesos del personal asignado.
+                        </p>
+                        <div class="text-primary fw-bold small mt-3">Monitorear Actividades →</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pie de página corporativo -->
+    <footer class="bg-white border-top text-center py-4 mt-5">
+        <div class="container">
+            <p class="text-muted small mb-0">
+                &copy; 2026 - Sistema de Gestión de Actividades Organizacionales. Desarrollado por <b>Qdata Technologies</b>.
+            </p>
+        </div>
+    </footer >
+{% endblock %}

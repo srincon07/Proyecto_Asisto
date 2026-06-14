@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}Escaner de Asistencia - {{ actividad.nombre_evento }}{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 700px;">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white p-4 text-center">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <span class="badge bg-success px-3 py-2">Modo Operador de Puerta</span>
+        </div>
+        <h3 class="fw-bold m-0"><i class="bi bi-camera-fill me-2 text-info"></i>Control de Acceso</h3>
+        <p class="text-white-50 small m-0 mt-1">{{ actividad.nombre_evento }}</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 text-center mb-4 bg-white">
+        <h5 class="fw-bold text-secondary mb-3">Escanear Pase Digital (QR Invertido)</h5>
+        
+        <div id="reader" class="mx-auto border rounded-3 bg-light" style="max-width: 400px; width: 100%;"></div>
+        
+        <div class="mt-4 mx-auto" style="max-width: 400px;">
+            <label for="input-codigo" class="form-label small fw-bold text-uppercase text-muted">¿Código Manual o Pistola Lectora?</label>
+            <div class="input-group">
+                <input type="text" id="input-codigo" class="form-control text-center fw-bold" placeholder="Escriba o pistolee el código aquí" autofocus>
+                <button class="btn btn-primary" type="button" id="btn-validar-manual">Validar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Generamos la URL dinámicamente usando el reverse name de Django
+        const urlValidacion = "{% url 'Eventos:validar_codigo_asistencia_ajax' actividad.id %}";
+        const inputCodigo = document.getElementById("input-codigo");
+        const btnManual = document.getElementById("btn-validar-manual");
+
+        // Enviar el código capturado al backend de Django por AJAX
+        function enviarCodigoBackend(codigo) {
+            if (!codigo.trim()) return;
+
+            fetch(urlValidacion, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ codigo: codigo })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡ACCESO CONCEDIDO!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ACCESO DENEGADO',
+                        text: data.message,
+                        timer: 3500
+                    });
+                }
+                inputCodigo.value = "";
+                inputCodigo.focus(); // Mantener el foco listo para el siguiente asistente
+            })
+            .catch(err => {
+                console.error("Error en la petición:", err);
+                inputCodigo.focus();
+            });
+        }
+
+        // 1. Manejo de escáner físico de pistola (Captura el Enter automático del lector)
+        inputCodigo.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                enviarCodigoBackend(inputCodigo.value);
+            }
+        });
+
+        btnManual.addEventListener("click", function() {
+            enviarCodigoBackend(inputCodigo.value);
+        });
+
+        // 2. Inicialización de la Cámara Web usando la librería nativa (Sintaxis corregida)
+        function onScanSuccess(decodedText, decodedResult) {
+            // Detener temporalmente el escáner para evitar múltiples lecturas del mismo QR
+            html5QrcodeScanner.clear();
+            enviarCodigoBackend(decodedText);
+            
+            // Reiniciar el lector después de 2.5 segundos para el siguiente asistente
+            setTimeout(() => {
+                startScanner();
+            }, 2500);
+        }
+
+        let html5QrcodeScanner;
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        startScanner();
+    });
+</script>
+{% endblock %}

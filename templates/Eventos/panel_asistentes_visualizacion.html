@@ -1,0 +1,307 @@
+
+{% extends "layout.html" %}
+
+
+{% block title %}
+Panel de Control de Asistencia - {{ actividad.nombre_evento }}    
+{% endblock%}
+
+{% block content %}
+
+    <!-- Navbar Interno -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'Eventos:lista_eventos' %}">
+                <i class="bi bi-arrow-left-short fs-4 align-middle"></i> Regresar a Gestión de Eventos
+            </a>
+            <span class="badge bg-info text-dark fw-bold px-3 py-2">Módulo de Auditoría</span>
+        </div>
+    </nav>
+
+    <div class="d-none d-print-block w-100 mb-4">
+        <table class="table table-borderless align-middle m-0" style="border-bottom: 3px solid #1a365d !important;">
+            <tr>
+                <td style="width: 20%;" class="text-start ps-0">
+                    {% if organizacion and organizacion.logo %}
+                        <img src="{{ organizacion.logo.url }}" alt="Logo {{ organizacion.nombre_organizacion }}" style="max-height: 65px; width: auto; object-fit: contain;">
+                    {% else %}
+                        <div style="width: 65px; height: 65px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #aaa; text-align: center;">
+                            Sin Logo
+                        </div>
+                    {% endif %}
+                </td>
+                
+                <td style="width: 55%;" class="text-center">
+                    <h4 class="fw-bold m-0" style="font-family: 'Arial', sans-serif; color: #1a365d; text-transform: uppercase; letter-spacing: 0.5px;">
+                        {{ organizacion.nombre_organizacion|default:"Institución del Sistema" }}
+                    </h4>
+                    <small class="text-dark d-block fw-semibold mt-1" style="font-size: 0.8rem;">
+                        NIT: {{ organizacion.nit|default:"000000000-0" }}
+                    </small>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;">
+                        {{ organizacion.direccion|default:"" }} | Tel: {{ organizacion.telefono|default:"" }}
+                    </small>
+                    <small class="text-muted d-block" style="font-size: 0.7rem; font-style: italic;">
+                        {{ organizacion.correo_electronico|default:"" }}
+                    </small>
+                </td>
+                
+                <td style="width: 25%; font-size: 0.75rem;" class="text-end pe-0 text-secondary">
+                    <div class="fw-bold text-dark" style="font-size: 0.8rem; letter-spacing: 0.5px;">REPORTE DE ASISTENCIA</div>
+                    <div class="mt-1"><b>Fecha Impresión:</b> {% now "d/m/Y g:i a" %}</div>
+                    <div><b>Generado por:</b> {{ request.user }}</div>
+                    <div><b>Dependencia:</b> {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.nombre_unidad|default:"N/A" }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="container my-5">
+        <!-- Cabecera Estratégica -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <span class="text-uppercase tracking-wider text-muted fw-bold small">Monitoreo de Impacto</span>
+                    <h1 class="fw-bold text-dark m-0 mt-1">{{ actividad.nombre_evento }}</h1>
+                    <p class="text-muted m-0 mt-2">
+                        <i class="bi bi-calendar3 me-2"></i>{{ actividad.fecha_hora_inicio|date:"d M Y - h:i a" }} 
+                        <span class="mx-2">|</span> 
+                        <i class="bi bi-layers-half me-1"></i> Línea: {{ actividad.id_tipo_actividad.id_linea.nombre_linea|default:"General" }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="row g-2">
+                        <!-- Tarjeta: Asistentes Confirmados -->
+                        <div class="col-6">
+                            <div class="bg-success bg-opacity-10 p-3 rounded-4 text-center border border-success border-opacity-25">
+                                <h3 class="fw-bold text-success m-0">{{ asistentes_confirmados.count }}</h3>
+                                <small class="text-success text-uppercase fw-semibold" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check-circle me-1"></i>Confirmados
+                                </small>
+                            </div>
+                        </div>
+                        <!-- Tarjeta: Asistentes Registrados -->
+                        <div class="col-6">
+                            <div class="bg-info bg-opacity-10 p-3 rounded-4 text-center border border-info border-opacity-25">
+                                <h3 class="fw-bold text-info m-0">{{ asistentes_registrados.count }}</h3>
+                                <small class="text-info text-uppercase fw-semibold" style="font-size: 0.7rem;">
+                                    <i class="bi bi-clipboard-check me-1"></i>Registrados
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Control de Personas -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-secondary m-0">Colaboradores / Participantes Registrados</h4>
+                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Imprimir Reporte
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4 align-items-center">
+                <div class="col-12 col-md-6">
+                    <div class="btn-group shadow-sm w-100 w-md-auto" role="group" aria-label="Filtros de estado">
+                        <button class="btn btn-outline-secondary btn-sm active" onclick="filtrarEstado('')" id="btnTodos">
+                            <i class="bi bi-funnel me-1"></i>Mostrar Todos
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="filtrarEstado('CONFIRMADO')" id="btnConfirmados">
+                            <i class="bi bi-check-circle me-1"></i>Solo Confirmados
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="filtrarEstado('REGISTRADO')" id="btnRegistrados">
+                            <i class="bi bi-clipboard-check me-1"></i>Solo Registrados
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-6">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" 
+                            id="inputBuscador" 
+                            class="form-control border-start-0 ps-0" 
+                            placeholder="Buscar por nombre, apellido o documento..."
+                            autocomplete="off">
+                        <button class="btn btn-outline-secondary border-start-0" type="button" id="btnLimpiarBuscar" style="display: none;">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="tableAsistencias">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Identificación</th>
+                            <th>Nombre Completo</th>
+                            <th>Correo Electrónico</th>
+                            <th>Estado y Trazabilidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in asistencias %}
+                        <tr class="row-asistencia" data-estado="{{ reg.estado }}">
+                            <td class="fw-bold text-secondary">{{ reg.asistente.identificacion }}</td>
+                            <td class="fw-semibold text-dark">{{ reg.asistente.nombres }} {{ reg.asistente.apellidos }}</td>
+                            <td>{{ reg.asistente.email }}</td>
+                            <td>
+                                <!-- 1. Indicador visual del Estado Actual -->
+                                {% if reg.estado == 'CONFIRMADO' %}
+                                    <span class="badge bg-success px-2 py-1 mb-1d-print-inline">
+                                        <i class="bi bi-shield-check me-1 d-print-none"></i> Confirmado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 mb-1 d-print-inline">
+                                        <i class="bi bi-clock me-1 d-print-none"></i> Registrado
+                                    </span>
+                                {% endif %}
+
+                                <!-- 2. Bloque de Trazabilidad de Tiempos (Registro y Confirmación si aplica) -->
+                                <div class="text-muted mt-1" style="font-size: 0.75rem; line-height: 1.2;">
+                                    
+                                    <div>
+                                        <span class="d-print-none"><i class="bi bi-file-earmark-plus me-1"></i></span>
+                                        <b>Reg:</b> {{ reg.fecha_registro|date:"d/m/Y H:i" }}
+                                    </div>
+                                    {% if reg.estado == 'CONFIRMADO' and reg.fecha_confirmacion %}
+                                    <div class="text-success mt-0.5 d-print-black">
+                                        <span class="d-print-none"><i class="bi bi-patch-check me-1"></i></span>
+                                        <b>Conf:</b> {{ reg.fecha_confirmacion|date:"d/m/Y H:i" }}
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="row-vacia">
+                            <td colspan="4" class="text-center text-muted py-5">
+                                <i class="bi bi-people-fill display-4 d-block mb-3 text-black-50"></i>
+                                Ningún asistente ha escaneado el código o ingresado mediante el enlace todavía.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+    
+{% block extra_js %}
+    
+    <script>
+        // ==========================================
+        // VARIABLES DE ESTADO GLOBAL
+        // ==========================================
+        // Conservamos en memoria el estado seleccionado para que la búsqueda y los botones coexistan.
+        let estadoFiltradoActual = ''; 
+
+        // ==========================================
+        // EVENTO PRINCIPAL AL CARGAR EL DOCUMENTO
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputBuscador = document.getElementById('inputBuscador');
+            const btnLimpiarBuscar = document.getElementById('btnLimpiarBuscar');
+
+            // Escucha en tiempo real cuando el usuario escribe en el input
+            if (inputBuscador) {
+                inputBuscador.addEventListener('input', ejecutarFiltroCombinado);
+            }
+
+            // Escucha el clic en el botón 'X' para limpiar el buscador
+            if (btnLimpiarBuscar) {
+                btnLimpiarBuscar.addEventListener('click', function() {
+                    inputBuscador.value = '';
+                    ejecutarFiltroCombinado();
+                    inputBuscador.focus();
+                });
+            }
+        });
+
+        // ==========================================
+        // FUNCIÓN 1: CONTROL DE LOS BOTONES DE FILTRO
+        // ==========================================
+        // Reemplaza por completo tu función anterior. Ahora solo gestiona lo visual y delega el filtrado.
+        function filtrarEstado(estado) {
+            estadoFiltradoActual = estado; // Guardamos el filtro activo (Todos, CONFIRMADO o REGISTRADO)
+            
+            // Quitar la clase 'active' de todos los botones para limpiarlos
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Asignar la clase 'active' únicamente al botón que presionó el usuario
+            if (estado === '') {
+                document.getElementById('btnTodos').classList.add('active');
+            } else if (estado === 'CONFIRMADO') {
+                document.getElementById('btnConfirmados').classList.add('active');
+            } else if (estado === 'REGISTRADO') {
+                document.getElementById('btnRegistrados').classList.add('active');
+            }
+
+            // Ejecutamos el filtro combinando el estado del botón con lo que haya en el buscador
+            ejecutarFiltroCombinado();
+        }
+
+        // ==========================================
+        // FUNCIÓN 2: MOTOR DE FILTRADO COMBINADO (CORE)
+        // ==========================================
+        // Esta nueva función evalúa fila por fila si cumple con ambas condiciones a la vez.
+        function ejecutarFiltroCombinado() {
+            const inputBuscador = document.getElementById('inputBuscador');
+            const query = inputBuscador ? inputBuscador.value.toLowerCase().trim() : '';
+            
+            const filas = document.querySelectorAll('.row-asistencia');
+            const filaVacia = document.querySelector('.row-vacia');
+            const btnLimpiar = document.getElementById('btnLimpiarBuscar');
+            
+            let filasVisibles = 0;
+
+            // Mostrar u ocultar el botón 'X' dinámicamente
+            if (btnLimpiar) {
+                btnLimpiar.style.display = query.length > 0 ? 'block' : 'none';
+            }
+
+            // Iteración sobre cada asistente en la tabla
+            filas.forEach(fila => {
+                // Captura todo el texto legible de la fila (Nombres, Cédula, etc.)
+                const textoContenidoFila = fila.textContent.toLowerCase();
+                const estadoFila = fila.getAttribute('data-estado');
+
+                // Condición A: ¿El asistente pertenece al estado del botón seleccionado?
+                const cumpleEstado = (estadoFiltradoActual === '' || estadoFila === estadoFiltradoActual);
+                
+                // Condición B: ¿Lo escrito en el buscador coincide con los datos del asistente?
+                const cumpleBusqueda = (query === '' || textoContenidoFila.includes(query));
+
+                // Si pasa ambos filtros, se muestra en la tabla; si no, se oculta
+                if (cumpleEstado && cumpleBusqueda) {
+                    fila.style.display = '';
+                    filasVisibles++;
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+
+            // Control de la fila de alerta cuando la tabla se queda sin registros visibles
+            if (filaVacia) {
+                if (filasVisibles === 0) {
+                    filaVacia.style.display = '';
+                    // Si no hay filas por culpa de una búsqueda, personalizamos el texto de aviso
+                    const textoAlerta = query !== '' ? 'No se encontraron asistentes que coincidan con los criterios de búsqueda.' : 'No hay asistentes registrados en esta categoría.';
+                    filaVacia.querySelector('td').innerText = textoAlerta;
+                } else {
+                    filaVacia.style.display = 'none';
+                }
+            }
+        }
+    </script>
+{% endblock %}
