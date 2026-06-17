@@ -5,15 +5,15 @@
 {% block content %}
 <div class="container py-5">
     <!-- Encabezado de la Agenda -->
-    <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded mb-4">
+    <div class="d-flex justify-content-between align-items-center custom-header p-3 shadow-sm rounded mb-4">
         <div class="d-flex align-items-center">
             <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
                 <i class="bi bi-house-door-fill"></i>
             </a>
-            <h2 class="m-0 text-primary h4 fw-bold">Gestión Objetivos y Líneas</h2>
+            <h2 class="m-0 text-white h4 fw-bold">Gestión de objetivos y líneas</h2>
         </div>
-        <a href="{% url 'EstructuraApp:gestionar_tipos' %}" class="btn btn-primary d-flex align-items-center shadow-sm">
-            <i class="bi bi-list-task me-2"></i> Ir a Gestión Tipos de Actividad
+        <a href="{% url 'EstructuraApp:gestionar_tipos' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold d-flex align-items-center shadow-sm">
+            <i class="bi bi-list-task me-2"></i> Ir a gestión tipos de actividad
         </a>
     </div>
 
@@ -21,13 +21,13 @@
         <!-- Columna 1: Registro de Objetivo -->
         <div class="col-lg-6">
             <div class="card shadow border-0">
-                <div class="card-header custom-header py-3">
-                    <h5 class="m-0 fw-bold text-white">
-                        <i class="bi bi-target me-2"></i> {{ titulo_obj|default:"Nuevo Objetivo" }}
+                <div class="card-header card-secondary-header py-3">
+                    <h5 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-target me-2"></i> {{ titulo_obj|default:"Nuevo objetivo" }}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="formObjetivo">
                         {% csrf_token %}
                         <input type="hidden" name="tipo_registro" value="objetivo">
                         
@@ -62,12 +62,12 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
-                            <i class="bi bi-check-circle-fill me-2"></i> Guardar Objetivo
+                            <i class="bi bi-check-circle-fill me-2"></i> Guardar objetivo
                         </button>
                         
                         {% if obj_id %}
                             <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-secondary w-100 mt-2 fw-bold">
-                                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                                <i class="bi bi-x-circle me-1"></i> Cancelar edición
                             </a>
                         {% endif %}
                     </form>
@@ -78,13 +78,13 @@
         <!-- Columna 2: Registro de Línea -->
         <div class="col-lg-6">
             <div class="card shadow border-0">
-                <div class="card-header custom-header py-3">
-                    <h5 class="m-0 fw-bold text-white">
-                        <i class="bi bi-diagram-3 me-2"></i> {{ titulo_lin|default:"Nueva Línea" }}
+                <div class="card-header card-secondary-header py-3">
+                    <h5 class="m-0 fw-bold text-primary">
+                        <i class="bi bi-diagram-3 me-2"></i> {{ titulo_lin|default:"Nueva línea" }}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="formLinea">
                         {% csrf_token %}
                         <input type="hidden" name="tipo_registro" value="linea">
                         
@@ -118,12 +118,12 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
-                            <i class="bi bi-check-circle-fill me-2"></i> Guardar Línea
+                            <i class="bi bi-check-circle-fill me-2"></i> Guardar línea
                         </button>
                         
                         {% if linea_id %}
                             <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-secondary w-100 mt-2 fw-bold">
-                                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                                <i class="bi bi-x-circle me-1"></i> Cancelar edición
                             </a>
                         {% endif %}
                     </form>
@@ -135,7 +135,7 @@
     <!-- Jerarquía de Estructura -->
     <div class="row mt-5">
         <div class="col-12">
-            <h4 class="fw-bold mb-4">
+            <h4 class="text-primary fw-bold mb-4">
                 <i class="bi bi-diagram-2 me-2"></i> Estructura Actual
             </h4>
 
@@ -147,7 +147,7 @@
                             <div class="bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
                                 <div class="flex-grow-1">
                                     <span class="fw-bold text-primary text-uppercase small">
-                                        <i class="bi bi-target me-2"></i>{{ obj.nombre_objetivo }}
+                                        <i class="bi bi-target me-2"></i>{{ obj }}
                                     </span>
                                 </div>
                                 <div class="btn-group shadow-sm" role="group">
@@ -199,10 +199,43 @@
 
 {% block extra_js %}
 <script>
+// --- INTERCEPCIÓN Y LOADING PARA FORMULARIOS ---
+document.addEventListener('DOMContentLoaded', function() {
+    const formObjetivo = document.getElementById('formObjetivo');
+    const formLinea = document.getElementById('formLinea');
+
+    const loadingConfig = {
+        title: 'Guardando datos...',
+        html: 'Por favor, espera un momento.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    };
+
+    if (formObjetivo) {
+        formObjetivo.addEventListener('submit', function(e) {
+            // Validamos que el formulario HTML5 nativo sea válido antes de disparar el alert
+            if (formObjetivo.checkValidity()) {
+                Swal.fire(loadingConfig);
+            }
+        });
+    }
+
+    if (formLinea) {
+        formLinea.addEventListener('submit', function(e) {
+            if (formLinea.checkValidity()) {
+                Swal.fire(loadingConfig);
+            }
+        });
+    }
+});
+
+// --- CONFIRMACIÓN DE ELIMINACIONES ---
 function confirmarEliminacionObjetivo(id, nombre) {
     Swal.fire({
         title: '¿Eliminar objetivo?',
-        html: `Estás a punto de eliminar el objetivo <strong>${nombre}</strong>.<br><small>Las líneas asociadas también serán eliminadas.</small>`,
+        html: `Estás a punto de eliminar el objetivo <strong>${nombre}</strong>.<br><small class="text-danger">Aviso: Si tiene líneas o relaciones protegidas en cascada, el sistema denegará la acción.</small>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -211,6 +244,12 @@ function confirmarEliminacionObjetivo(id, nombre) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Spinner de carga mientras redirecciona y elimina
+            Swal.fire({
+                title: 'Eliminando...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
             const baseUrl = "{% url 'EstructuraApp:gestion_estructura' %}";
             const url = `${baseUrl}eliminar/obj/${id}/`;
             window.location.href = url;
@@ -230,6 +269,11 @@ function confirmarEliminacionLinea(id, nombre) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Eliminando...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
             const baseUrl = "{% url 'EstructuraApp:gestion_estructura' %}";
             const url = `${baseUrl}eliminar/lin/${id}/`;
             window.location.href = url;
@@ -237,7 +281,7 @@ function confirmarEliminacionLinea(id, nombre) {
     });
 }
 
-// Mostrar mensajes de éxito/error
+// --- MENSAJES DE RESPUESTA DESDE DJANGO (MESSAGES) ---
 document.addEventListener('DOMContentLoaded', function() {
     {% if messages %}
         {% for message in messages %}
@@ -246,13 +290,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'success',
                     title: '¡Operación Exitosa!',
                     text: "{{ message }}",
-                    timer: 2000,
+                    timer: 2500,
                     showConfirmButton: false
                 });
             {% elif message.tags == 'error' %}
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
+                    title: 'No se pudo completar la acción',
                     text: "{{ message }}",
                     confirmButtonColor: 'rgb(75, 93, 220)'
                 });

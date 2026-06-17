@@ -51,15 +51,15 @@
                     <tbody>
                         {% for persona in personas %}
                         <tr class="row-persona">
-                            <td class="ps-4 fw-semibold">{{ persona.identificacion }}</td>
-                            <td class="fw-bold text-dark">{{ persona.nombres }} {{ persona.apellidos }}</td>
-                            <td>
+                            <td class="ps-4 fw-semibold text-primary">{{ persona.identificacion }}</td>
+                            <td class="fw-bold text-primary">{{ persona.nombres }} {{ persona.apellidos }}</td>
+                            <td class="text-primary">
                                 <div class="d-flex flex-column">
                                     <span class="text-secondary">
                                         <i class="bi bi-building me-1"></i> {{ persona.organizacion_origen|default:"Particular/Externo" }}
                                     </span>
                                     {% if persona.discapacidad %}
-                                        <span class="badge bg-info text-dark mt-1 self-start" style="max-width: max-content; font-size: 0.7rem;">
+                                        <span class="badge bg-info text-primary mt-1 self-start" style="max-width: max-content; font-size: 0.7rem;">
                                             <i class="bi bi-eye-fill me-1"></i> Discapacidad: {{ persona.discapacidad.nombre_discapacidad }}
                                         </span>
                                     {% endif %}
@@ -74,7 +74,7 @@
                             <td>
                                 <small>
                                     {% for pr in persona.personarol_set.all %}
-                                        <div class="mb-1">
+                                        <div class="mb-1 text-primary">
                                             <strong>{{ pr.rol.nombre_role }}</strong>
                                         </div>
                                     {% empty %}
@@ -82,7 +82,7 @@
                                     {% endfor %}
                                 </small>
                             </td>
-                            <td>
+                            <td class="text-primary">
                                 <small>
                                     {% for pc in persona.personacargo_set.all %}
                                         <div class="mb-1 d-flex align-items-center gap-1">
@@ -97,14 +97,14 @@
                                 </small>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-light text-dark border" style="font-size: 0.75rem;">{{ persona.genero }}</span>
+                                <span class="badge bg-light text-primary border" style="font-size: 0.75rem;">{{ persona.genero }}</span>
                             </td>
                             <td class="text-center cell-acciones">
                                 <div class="btn-group shadow-sm" role="group">
                                     <a href="{% url 'PersonasApp:editar_persona' persona.id %}" class="btn btn-sm btn-warning" title="Editar">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
-                                    <button type="button" onclick="confirmarEliminacion({{ persona.id }}, '{{ persona.nombres|escapejs }} {{ persona.apellidos|escapejs }}')" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <button type="button" onclick="confirmarEliminacionPersona({{ persona.id }}, '{{ persona.nombres|escapejs }} {{ persona.apellidos|escapejs }}')" class="btn btn-sm btn-danger shadow-sm" title="Eliminar">
                                         <i class="bi bi-trash-fill"></i>
                                     </button>
                                 </div>
@@ -138,23 +138,6 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-// --- Conservas tu función de SweetAlert intacta ---
-function confirmarEliminacion(id, nombreCompleto) {
-    Swal.fire({
-        title: '¿Eliminar registro?',
-        html: `Está a punto de eliminar a <strong>${nombreCompleto}</strong>.<br><small class=\"text-danger\">Esta acción removerá sus historiales de asistencia.</small>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class=\"bi bi-trash-fill me-2\"></i>Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `{% url 'PersonasApp:eliminar_persona' 0 %}`.replace('0', id);
-        }
-    })
-}
 
 // --- NUEVA LÓGICA DE BÚSQUEDA EN TIEMPO REAL ---
 document.addEventListener('DOMContentLoaded', function() {
@@ -198,6 +181,72 @@ document.addEventListener('DOMContentLoaded', function() {
             buscador.focus();
         });
     }
+
+    // =================================================================
+    // NUEVA FUNCIONALIDAD: INTERCEPTOR DE MENSAJES DJANGO
+    // =================================================================
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Operación Exitosa!',
+                    text: "{{ message }}",
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            {% elif message.tags == 'error' %}
+                let textoError = "{{ message }}";
+                let tituloError = "No se puede eliminar";
+                
+                // Si el backend detectó relaciones con cargos o eventos
+                if (textoError === "error_relacion_asistente") {
+                    textoError = "Esta persona no puede ser eliminada porque tiene cargos institucionales asignados o ya cuenta con asistencias registradas en eventos.";
+                    tituloError = "Acción Denegada";
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: tituloError,
+                    text: textoError,
+                    confirmButtonColor: 'rgb(75, 93, 220)'
+                });
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 });
+
+
+// =================================================================
+// NUEVA FUNCIONALIDAD: CONFIRMACIÓN DE ELIMINACIÓN DE PERSONA
+// =================================================================
+function confirmarEliminacionPersona(id, nombreCompleto) {
+    Swal.fire({
+        title: '¿Eliminar persona?',
+        html: `Estás a punto de eliminar permanentemente a <strong>${nombreCompleto}</strong> de la plataforma.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Loader para evitar múltiples clicks mientras procesa el redireccionamiento
+            Swal.fire({
+                title: 'Verificando y eliminando...',
+                allowOutsideClick: false,
+                didOpen: () => { 
+                    Swal.showLoading(); 
+                }
+            });
+            
+            // Construcción de la URL de borrado
+            let url = "{% url 'PersonasApp:eliminar_persona' 0 %}".replace('0', id);
+            window.location.href = url;
+        }
+    });
+}
+
 </script>
 {% endblock %}

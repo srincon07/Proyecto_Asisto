@@ -14,7 +14,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" id="formTipoActividad">
                         {% csrf_token %}
                         
                         <div class="mb-3">
@@ -47,13 +47,13 @@
                             {% endif %}
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
-                            <i class="bi bi-check-circle-fill me-2"></i> {% if id_edit %}Actualizar Cambios{% else %}Guardar Tipo{% endif %}
+                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> {% if id_edit %}Actualizar cambios{% else %}Guardar tipo{% endif %}
                         </button>
                         
                         {% if id_edit %}
                             <a href="{% url 'EstructuraApp:gestionar_tipos' %}" class="btn btn-outline-secondary w-100 mt-2 fw-bold">
-                                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                                <i class="bi bi-x-circle me-1"></i> Cancelar edición
                             </a>
                         {% endif %}
                     </form>
@@ -66,14 +66,14 @@
             <div class="card shadow border-0 mx-auto">
                 <div class="card-header custom-header py-3 d-flex justify-content-between align-items-center">
                     <h5 class="m-0 fw-bold text-white">
-                        <i class="bi bi-list-task me-2"></i> Tipos de Actividad
+                        <i class="bi bi-list-task me-2"></i> Tipos de actividad
                     </h5>
 
                     <div class="d-flex flex-row align-items-end gap-2">
-                        <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-light btn-sm" title="Gestionar Estructura">
+                        <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold" title="Gestionar Estructura">
                             <i class="bi bi-gear-fill"></i> Estructura
                         </a>
-                        <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary btn-sm" title="Volver al Menú Principal">
+                        <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold" title="Volver al Menú Principal">
                             <i class="bi bi-house-door-fill"></i> Inicio
                         </a>
                     </div>
@@ -145,10 +145,32 @@
 
 {% block extra_js %}
 <script>
+// --- INTERCEPCIÓN Y LOADING PARA EL FORMULARIO ---
+document.addEventListener('DOMContentLoaded', function() {
+    const formTipoActividad = document.getElementById('formTipoActividad');
+
+    if (formTipoActividad) {
+        formTipoActividad.addEventListener('submit', function(e) {
+            // Validamos que los campos requeridos HTML5 nativos sean correctos antes del spinner
+            if (formTipoActividad.checkValidity()) {
+                Swal.fire({
+                    title: 'Guardando datos...',
+                    html: 'Por favor, espera un momento.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+    }
+});
+
+// --- CONFIRMACIÓN DE ELIMINACIÓN CON SPINNER ---
 function confirmarEliminacion(id, nombre) {
     Swal.fire({
         title: '¿Eliminar este tipo?',
-        html: `Estás por borrar <strong>${nombre}</strong>.<br><small>Esta acción no se puede deshacer.</small>`,
+        html: `Estás por borrar <strong>${nombre}</strong>.<br><small class="text-danger">Aviso: Si tiene actividades programadas asociadas, el sistema denegará la acción.</small>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -157,13 +179,22 @@ function confirmarEliminacion(id, nombre) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Spinner de carga intermedio mientras el backend procesa la eliminación
+            Swal.fire({
+                title: 'Eliminando...',
+                allowOutsideClick: false,
+                didOpen: () => { 
+                    Swal.showLoading(); 
+                }
+            });
+            
             let url = "{% url 'EstructuraApp:eliminar_tipo' 0 %}".replace('0', id);
             window.location.href = url;
         }
     });
 }
 
-// Mostrar mensajes de éxito/error
+// --- NOTIFICACIONES DEL SISTEMA DE MENSAJES DE DJANGO ---
 document.addEventListener('DOMContentLoaded', function() {
     {% if messages %}
         {% for message in messages %}
@@ -172,14 +203,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'success',
                     title: '¡Operación Exitosa!',
                     text: "{{ message }}",
-                    timer: 2000,
+                    timer: 2500,
                     showConfirmButton: false
                 });
             {% elif message.tags == 'error' %}
+                // Si la vista arroja un ProtectedError de Django, se maneja estéticamente aquí
+                let textoError = "{{ message }}";
+                if (textoError === "error_relacion") {
+                    textoError = "No se puede eliminar este tipo de actividad porque cuenta con eventos o actividades programadas vigentes.";
+                }
+                
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: "{{ message }}",
+                    title: 'No se pudo completar la acción',
+                    text: textoError,
                     confirmButtonColor: 'rgb(75, 93, 220)'
                 });
             {% endif %}
@@ -187,4 +224,4 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
 });
 </script>
-{% endblock %} 
+{% endblock %}

@@ -154,3 +154,5 @@ AUTH_USER_MODEL = "PersonasApp.Persona"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "EstructuraApp:inicio"
 LOGOUT_REDIRECT_URL = "login"
+
+AWS_DEFAULT_ACL = 'public-read'

@@ -57,4 +57,6 @@ urlpatterns = [
         views.obtener_roles_disponibles,
         name="obtener_roles_disponibles",
     ),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('api/indicadores/', views.api_indicadores, name='api_indicadores'),
 ]

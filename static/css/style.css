@@ -13,6 +13,7 @@
     --color-danger: #dc3545;
     --color-warning: #ffc107;
     --color-light: #f8f9fa;
+    --color-light-blue: #BCD4E6;
     --color-border: #dee2e6;
     --color-text: #212529;
     --color-text-muted: #495057;
@@ -207,6 +208,13 @@ h4 {
     border-bottom: 1px solid var(--color-border);
 }
 
+.card-secondary-header {
+    background-color: var(--color-light-blue);
+    color: var(--color-primary);
+    font-weight: 600;
+    border-bottom: none;
+}
+
 .card-body {
     padding: 1.5rem;
 }
@@ -216,7 +224,7 @@ h4 {
     font-weight: 600;
     font-size: 0.875rem;
     color: var(--color-text-muted);
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.5px;
     margin-bottom: 0.5rem;
     display: block;
@@ -285,14 +293,42 @@ h4 {
     border-bottom-right-radius: 50px;
 }
 
+.custom-btn {
+    --bs-btn-bg: #B7410E;
+    --bs-btn-color: #f8f9fa;
+    --bs-btn-border-color: #f8f9fa;
+    --bs-btn-hover-color: #f8f9fa;
+    --bs-btn-hover-bg: #cc6032;
+    --bs-btn-hover-border-color: #f8f9fa;
+    --bs-btn-focus-shadow-rgb: 248, 249, 250;
+    --bs-btn-active-color: #000;
+    --bs-btn-active-bg: #f8f9fa;
+    --bs-btn-active-border-color: #f8f9fa;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #f8f9fa;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #f8f9fa;
+    --bs-gradient: none;
+}
+
 .feature-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent !important;
 }
 
 .feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+    border: 1px solid #1e2b58 !important;
+}
+
+.icon-box {
+    transition: background 0.3s;
+}
+
+.feature-card:hover .icon-box {
+    background-color: #1e2b58 !important;
+    color: #ffffff !important;
 }
 
 .icon-box {
@@ -777,22 +813,6 @@ h4 {
     animation: slideIn 0.3s ease-in-out;
 }
 
-/* ========== IMPRESIÓN ========== */
-@media print {
-
-    .btn,
-    .btn-group,
-    .btn-outline-light,
-    .custom-header {
-        display: none !important;
-    }
-
-    .card {
-        box-shadow: none;
-        border: 1px solid #000;
-    }
-}
-
 .select2-container--default .select2-selection--single {
     height: 38px;
     border: 1px solid #dee2e6;
@@ -828,8 +848,8 @@ h4 {
 }
 
 .table thead th {
-    background-color: #212529;
-    color: white;
+    background-color: var(--color-light-blue);
+    color: #1e2b58;
     border: none;
 }
 
@@ -864,7 +884,7 @@ h4 {
     background-color: rgba(25, 135, 84, 0.04) !important;
 }
 
-
+/* ========== IMPRESIÓN ========== */
 @media print {
 
     /* 1. Configuración de página y márgenes físicos */
@@ -969,6 +989,7 @@ h4 {
         border-bottom: 1px solid #e0e0e0 !important;
         padding: 5px 8px !important;
         vertical-align: middle !important;
+        color: #000000 !important;
         font-size: 11px !important;
     }
 

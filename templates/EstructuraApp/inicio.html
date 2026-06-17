@@ -9,7 +9,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <i class="bi bi-briefcase-fill text-info me-2"></i> GESTIÓN ORGANIZACIONAL
+                <i class="bi bi-check2-square text-info me-2"></i> ASISTO
             </a>
             <div class="d-flex align-items-center gap-3">
                 <a href="{% url 'password_change' %}" class="btn btn-outline-warning btn-sm fw-bold" title="Cambiar Contraseña">
@@ -22,7 +22,7 @@
                     </button>
                 </form>
                 <span class="navbar-text small text-uppercase d-none d-md-inline border-start ps-3">
-                    <i class="bi bi-shield-check text-success me-1"></i> Entorno Seguro (Django)
+                    <i class="bi bi-shield-check text-success me-1"></i> Entorno Seguro
                 </span>
             </div>
         </div>
@@ -31,12 +31,12 @@
     <!-- Sección Hero Principal -->
     <header class="hero-section text-center shadow-sm">
         <div class="container my-3">
-            <h1 class="display-4 fw-bold mb-3">Control de Actividades y Objetivos</h1>
+            <h1 class="display-4 fw-bold mb-3">Conectamos personas, simplificamos eventos</h1>
             <p class="lead text-white-50 max-width-600 mx-auto mb-4">
-                Planifique los Objetivos Estratégicos de la organización, defina las líneas de acción y coordine el despliegue operativo de las actividades asignando responsables en tiempo real.
+                 ¡Asisto! es un sistema de información de vanguardia diseñado para simplificar la organización y el control de asistencia en eventos de cualquier escala. Desde reuniones de trabajo, seminarios locales hasta eventos masivos, nuestro sistema automatiza las fases críticas de preinscripción, validación de accesos y seguimiento de participantes. Al eliminar las listas de papel y las largas filas, ¡Asisto! permite a los organizadores concentrarse en lo que realmente importa: ofrecer una experiencia memorable a sus asistentes.
             </p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn btn-outline-light btn-lg px-4">
+                <a href="{% url 'EstructuraApp:gestion_estructura' %}" class="btn custom-btn btn-lg fw-bold px-4 shadow">
                     <i class="bi bi-diagram-3 me-2"></i> Estructura Estratégica
                 </a>
                 <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-warning btn-lg fw-bold px-4 shadow text-dark">
@@ -55,19 +55,19 @@
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
                     <h3 class="fw-bold text-success m-0">{{ total_en_curso }}</h3>
-                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">En Ejecución Ahora</small>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Actividades en Ejecución</small>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
                     <h3 class="fw-bold text-primary m-0">{{ total_programadas }}</h3>
-                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Tareas Planificadas</small>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Actividades Programadas</small>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center p-3 rounded-4 bg-white">
-                    <h3 class="fw-bold text-warning m-0">{{ total_responsables }}</h3>
-                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Personal Asignado</small>
+                    <h3 class="fw-bold text-warning m-0">{{ total_personas_registradas }}</h3>
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Personas Registradas</small>
                 </div>
             </div>
         </div>
@@ -145,6 +145,23 @@
                             Supervise el calendario global de actividades programadas. Controle los estados de ejecución en tiempo real y gestione los accesos del personal asignado.
                         </p>
                         <div class="text-primary fw-bold small mt-3">Monitorear Actividades →</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-3 feature-card" 
+                    onclick="location.href='{% url 'Eventos:dashboard' %}'" 
+                    style="cursor: pointer; transition: transform 0.2s;">
+                    <div class="card-body d-flex flex-column">
+                        <div class="icon-box mb-3" style="background-color: rgba(30, 43, 88, 0.1); color: #1e2b58; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <i class="bi bi-speedometer2 h3 m-0"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark">Portal de Indicadores</h4>
+                        <p class="card-text text-muted small flex-grow-1">
+                            Visualice estadísticas en tiempo real, tasas de participación y tendencias para una toma de decisiones informada.
+                        </p>
+                        <div class="fw-bold small mt-3" style="color: #1e2b58;">Analizar Datos →</div>
                     </div>
                 </div>
             </div>

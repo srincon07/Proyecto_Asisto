@@ -59,7 +59,7 @@ class Objetivo(models.Model):
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        return self.nombre_objetivo
+        return f"{self.nombre_objetivo} - [{self.id_unidad.nombre_unidad}]"
 
     class Meta:
         verbose_name = "Objetivo"

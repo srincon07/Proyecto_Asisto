@@ -26,8 +26,8 @@ def gestionar_estructura(request, edit_tipo=None, pk=None):
     # 1. Lógica para cargar datos en caso de edición
     obj_instancia = None
     linea_instancia = None
-    titulo_obj = "Nuevo Objetivo"
-    titulo_lin = "Nueva Línea de Acción"
+    titulo_obj = "Nuevo objetivo"
+    titulo_lin = "Nueva línea de acción"
     obj_id = None
     linea_id = None
 
@@ -77,7 +77,7 @@ def gestionar_estructura(request, edit_tipo=None, pk=None):
 def gestionar_tipos(request, pk=None):
     # Lógica de carga para edición (Equivalente al IF de tu PHP)
     instancia = get_object_or_404(TipoActividad, pk=pk) if pk else None
-    titulo_form = "Editar Tipo de Actividad" if pk else "Nuevo Tipo de Actividad"
+    titulo_form = "Editar tipo de actividad" if pk else "Nuevo tipo de actividad"
 
     if request.method == "POST":
         form = TipoActividadForm(request.POST, instance=instancia)
@@ -175,5 +175,6 @@ def inicio(request):
         .count(),
         "total_objetivos": Objetivo.objects.count(),
         "total_lineas": Linea.objects.count(),
+        "total_personas_registradas": Persona.objects.count()
     }
     return render(request, "EstructuraApp/inicio.html", context)

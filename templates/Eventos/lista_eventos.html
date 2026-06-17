@@ -6,14 +6,14 @@
 
 <div class="container mt-4">
     <!-- Encabezado de la Agenda -->
-    <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded mb-4">
+    <div class="d-flex justify-content-between align-items-center custom-header p-3 shadow-sm rounded mb-4">
         <div class="d-flex align-items-center">
-            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
+            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-light me-3" title="Volver al Menú Principal">
                 <i class="bi bi-house-door-fill"></i>
             </a>
-            <h2 class="m-0 text-primary h4 fw-bold">Agenda Institucional</h2>
+            <h2 class="m-0 h4 fw-bold">Agenda Institucional</h2>
         </div>
-        <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-primary d-flex align-items-center shadow-sm">
+        <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold d-flex align-items-center">
             <i class="bi bi-plus-circle me-2"></i> Nueva Actividad
         </a>
     </div>
@@ -35,14 +35,14 @@
                     <tbody>
                         {% for row in actividades %}
                         <tr class="{{ row.fila_class }}">
-                            <td class="ps-3">
+                            <td class="text-primary ps-3">
                                 <strong>{{ row.nombre_evento }}</strong><br>
                                 <small class="text-muted">
                                     <i class="bi bi-person-badge"></i> {{ row.id_responsable.nombres|default:"No asignado" }} {{ row.id_responsable.apellidos|default:"" }}
                                 </small>
                             </td>
-                            <td><span class="badge border text-dark bg-light">{{ row.id_tipo_actividad.nombre }}</span></td>
-                            <td>
+                            <td><span class="badge border text-primary bg-light">{{ row.id_tipo_actividad.nombre }}</span></td>
+                            <td class="text-primary">
                                 <!-- Filtro de fecha nativo de Django para dar formato "d/m h:i A" -->
                                 <div class="small"><b>Inicia:</b> {{ row.fecha_hora_inicio|date:"d/m h:i A" }}</div>
                                 <div class="small"><b>Termina:</b> {{ row.fecha_hora_fin|date:"d/m h:i A" }}</div>
@@ -58,7 +58,7 @@
                                 
                                 {% if row.asistencia_url %}
                                     <button type="button" 
-                                            class="btn btn-dark py-0 btn-qr" 
+                                            class="btn btn-primary py-0 btn-qr" 
                                             style="font-size: 0.7rem; padding: 2px 8px;"
                                             data-evento="{{ row.nombre_evento|escape }}"
                                             data-link="{{ row.asistencia_url|escape }}">
@@ -80,10 +80,13 @@
                                     {% endif %}
                                 {% endif %}
 
-                                <a href="{% url 'Eventos:interfaz_escaneo_asistencia' row.id %}" class="btn btn-sm btn-dark" 
-                                            style="font-size: 0.7rem; padding: 2px 8px;">
-                                    <i class="bi bi-camera-fill"></i>
-                                </a>
+                                
+                                {% if row.permite_qr_invertido %}
+                                    <a href="{% url 'Eventos:interfaz_escaneo_asistencia' row.id %}" class="btn btn-sm btn-outline-secondary mt-1" title="Escanear Asistencia"
+                                        style="font-size: 0.7rem; padding: 2px 8px;">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </a>
+                                {% endif %}
 
                             </td>
 

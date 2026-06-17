@@ -11,7 +11,7 @@ class ObjetivoForm(forms.ModelForm):
         # Personalizamos las etiquetas (labels)
         labels = {
             "id_unidad": "Unidad:",
-            "nombre_objetivo": "Nombre del Objetivo",
+            "nombre_objetivo": "Nombre del objetivo",
         }
 
         # Agregamos las clases de Bootstrap y atributos HTML usando widgets
@@ -42,8 +42,8 @@ class LineaForm(forms.ModelForm):
         fields = ["id_objetivo", "nombre_linea"]
 
         labels = {
-            "id_objetivo": "Pertenece al Objetivo:",
-            "nombre_linea": "Nombre de la Línea",
+            "id_objetivo": "Pertenece al objetivo:",
+            "nombre_linea": "Nombre de la línea",
         }
 
         widgets = {
@@ -76,8 +76,8 @@ class TipoActividadForm(forms.ModelForm):
         fields = ["id_linea", "nombre", "modalidad"]
 
         labels = {
-            "id_linea": "Línea de Acción",
-            "nombre": "Nombre del Tipo",
+            "id_linea": "Línea de acción",
+            "nombre": "Nombre del tipo",
             "modalidad": "Modalidad",
         }
 

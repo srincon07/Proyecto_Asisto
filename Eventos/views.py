@@ -30,6 +30,7 @@ from .forms import (
     ActividadProgramadaForm,
     CargaMasivaAsistentesForm,
 )  # Formularios creados con ModelForm
+from .services import obtener_datos_dashboard
 
 
 @login_required
@@ -1050,3 +1051,17 @@ def importar_asistentes_csv(request, actividad_id):
         "Eventos/cargar_asistentes_masivos.html",
         {"form": form, "actividad": actividad},
     )
+
+@login_required
+@requerir_rol_administrador
+def api_indicadores(request):
+    data = obtener_datos_dashboard()
+    return JsonResponse(data, safe=False)
+
+# Eventos/views.py
+
+@login_required
+@requerir_rol_administrador
+def dashboard_view(request):
+    """Esta vista simplemente carga el archivo HTML del dashboard."""
+    return render(request, 'Eventos/dashboard.html')

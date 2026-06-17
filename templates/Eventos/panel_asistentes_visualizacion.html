@@ -14,7 +14,6 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
             <a class="navbar-brand fw-bold" href="{% url 'Eventos:lista_eventos' %}">
                 <i class="bi bi-arrow-left-short fs-4 align-middle"></i> Regresar a Gestión de Eventos
             </a>
-            <span class="badge bg-info text-dark fw-bold px-3 py-2">Módulo de Auditoría</span>
         </div>
     </nav>
 
@@ -62,7 +61,7 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <span class="text-uppercase tracking-wider text-muted fw-bold small">Monitoreo de Impacto</span>
-                    <h1 class="fw-bold text-dark m-0 mt-1">{{ actividad.nombre_evento }}</h1>
+                    <h1 class="fw-bold text-primary m-0 mt-1">{{ actividad.nombre_evento }}</h1>
                     <p class="text-muted m-0 mt-2">
                         <i class="bi bi-calendar3 me-2"></i>{{ actividad.fecha_hora_inicio|date:"d M Y - h:i a" }} 
                         <span class="mx-2">|</span> 
@@ -142,19 +141,33 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
                             <th>Identificación</th>
                             <th>Nombre Completo</th>
                             <th>Correo Electrónico</th>
+                            <th>Organización de Origen</th>
+                            <th>Cargos Asignados</th>
                             <th>Estado y Trazabilidad</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for reg in asistencias %}
                         <tr class="row-asistencia" data-estado="{{ reg.estado }}">
-                            <td class="fw-bold text-secondary">{{ reg.asistente.identificacion }}</td>
-                            <td class="fw-semibold text-dark">{{ reg.asistente.nombres }} {{ reg.asistente.apellidos }}</td>
-                            <td>{{ reg.asistente.email }}</td>
-                            <td>
+                            <td class="fw-bold text-primary">{{ reg.asistente.identificacion }}</td>
+                            <td class="fw-semibold text-primary">{{ reg.asistente.nombres }} {{ reg.asistente.apellidos }}</td>
+                            <td class="text-primary">{{ reg.asistente.email }}</td>
+                            <td class="text-primary">{{ reg.asistente.organizacion_origen|default:"Particular/Externo" }}</td>
+                            
+                            <td class="text-primary">
+                                {% for cargo in reg.asistente.personacargo_set.all %}
+                                    <div class="mb-1">
+                                        <i class="bi bi-briefcase me-1"></i> {{ cargo.cargo.nombre_cargo }}
+                                    </div>
+                                {% empty %}
+                                    <span class="text-muted">Sin cargos asignados</span>
+                                {% endfor %}
+                            </td>
+
+                            <td class="text-primary">
                                 <!-- 1. Indicador visual del Estado Actual -->
                                 {% if reg.estado == 'CONFIRMADO' %}
-                                    <span class="badge bg-success px-2 py-1 mb-1d-print-inline">
+                                    <span class="badge bg-success px-2 py-1 mb-1 d-print-inline">
                                         <i class="bi bi-shield-check me-1 d-print-none"></i> Confirmado
                                     </span>
                                 {% else %}
@@ -164,8 +177,7 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
                                 {% endif %}
 
                                 <!-- 2. Bloque de Trazabilidad de Tiempos (Registro y Confirmación si aplica) -->
-                                <div class="text-muted mt-1" style="font-size: 0.75rem; line-height: 1.2;">
-                                    
+                                <div class="text-muted mt-1" style="font-size: 0.75rem; line-height: 1.2;">                                    
                                     <div>
                                         <span class="d-print-none"><i class="bi bi-file-earmark-plus me-1"></i></span>
                                         <b>Reg:</b> {{ reg.fecha_registro|date:"d/m/Y H:i" }}

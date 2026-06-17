@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from .models import Persona
+from django.contrib import messages
 from .forms import PersonaForm
 from .decorators import requerir_rol_administrador  # Importación de decoradores personalizados
+
+
 
 @login_required
 @requerir_rol_administrador
@@ -47,7 +50,26 @@ def registrar_editar_persona(request, pk=None):
 @requerir_rol_administrador
 def eliminar_persona(request, pk):
     persona = get_object_or_404(Persona, pk=pk)
-    persona.delete()
+    
+    # 1. Validar si tiene Cargos asociados (Usa el related_name por defecto de Django)
+    tiene_cargos = persona.personacargo_set.exists()
+    
+    # 2. Usa el related_name "historial_actividades" que definiste en RegistroAsistencia
+    tiene_asistencias = persona.historial_actividades.exists()
+
+    # Si cumple cualquiera de las dos, impedimos el borrado físico para proteger la integridad
+    if tiene_cargos or tiene_asistencias:
+        messages.error(request, "error_relacion_asistente")
+        return redirect("PersonasApp:lista_personas")
+    
+    try:
+        nombre_completo = f"{persona.nombres} {persona.apellidos}"
+        persona.delete()
+        messages.success(request, f"El registro de {nombre_completo} fue eliminado correctamente.")
+    except Exception as e:
+        # En caso de cualquier otro error de base de datos
+        messages.error(request, "No se pudo eliminar el registro debido a un error de integridad en el servidor.")
+        
     return redirect("PersonasApp:lista_personas")
 
 def error_403_permiso_denegado(request, exception=None):

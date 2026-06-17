@@ -19,7 +19,7 @@
         </div>
 
         <div class="card-body p-4">
-            <form method="POST">
+            <form method="POST" id="formPersona">
                 {% csrf_token %}
                 
                 <div class="row g-3">
@@ -62,12 +62,12 @@
                         <ul class="nav nav-tabs" id="personTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active fw-bold" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles-pane" type="button" role="tab">
-                                    <i class="bi bi-person-badge me-1"></i> Roles y Unidades
+                                    <i class="bi bi-person-badge me-1"></i> Roles
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link fw-bold" id="cargos-tab" data-bs-toggle="tab" data-bs-target="#cargos-pane" type="button" role="tab">
-                                    <i class="bi bi-briefcase me-1"></i> Cargos Institucionales
+                                    <i class="bi bi-briefcase me-1"></i> Cargos y Unidades
                                 </button>
                             </li>
                         </ul>
@@ -184,40 +184,26 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const inputId = document.getElementById('txtIdentificacion');
-    const params = new URLSearchParams(window.location.search);
-    const duplicateError = {% if status == 'error_duplicado' %}true{% else %}params.get('status') === 'error_duplicado'{% endif %};
     
-    if (inputId) inputId.focus();
-
-    if (duplicateError) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Identificación Duplicada',
-            text: 'Este número ya pertenece a otro registro.',
-            confirmButtonColor: 'rgb(75, 93, 220)'
-        }).then(() => { if(inputId) { inputId.focus(); inputId.select(); } });
-    }
-    window.history.replaceState({}, document.title, window.location.pathname);
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // === 1. LÓGICA DE CONTROL DE ESTADOS DE CARGOS ===
-    const rows = document.querySelectorAll('.cargo-row');
+    // =================================================================
+    // CONFIGURACIÓN ACTUAL: GESTIÓN DE CARGOS Y FILTRADO (PRESERVADO)
+    // =================================================================
     
-    rows.forEach(row => {
-        const checkbox = row.querySelector('.cargo-checkbox-wrapper input[type="checkbox"]');
-        const selectEstado = row.querySelector('.state-select-container select');
-        
-        if (checkbox && selectEstado) {
-            // Función para alternar el estado del select según el checkbox
+    // 1. Manejo del estado del checkbox y clases de fila
+    const cargoCheckboxes = document.querySelectorAll('#tableCargos tbody input[type="checkbox"]');
+    
+    cargoCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('.cargo-row');
+        if (row) {
+            const selectState = row.querySelector('.estado-select');
+            
             const toggleSelectState = () => {
                 if (checkbox.checked) {
-                    selectEstado.removeAttribute('disabled');
-                    row.classList.add('table-success-light'); // Opcional: Resaltar fila seleccionada
+                    row.classList.add('table-success-light');
+                    if (selectState) selectState.disabled = false;
                 } else {
-                    selectEstado.setAttribute('disabled', 'disabled');
                     row.classList.remove('table-success-light');
+                    if (selectState) selectState.disabled = true;
                 }
             };
 
@@ -229,7 +215,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // === 2. FILTRO DE BÚSQUEDA EN TIEMPO REAL ===
+    // 2. Filtro de búsqueda en tiempo real
+    // === 2. FILTRO DE BÚSQUEDA EN TIEMPO REAL (VERSIÓN MEJORADA GENERAL) ===
     const searchInput = document.getElementById('searchCargo');
     const tableRows = document.querySelectorAll('#tableCargos tbody .cargo-row');
     const totalCountSpan = document.getElementById('totalCargos');
@@ -242,10 +229,22 @@ document.addEventListener('DOMContentLoaded', function() {
             let visibleCount = 0;
 
             tableRows.forEach(row => {
-                const cargoText = row.querySelector('.cargo-name').textContent.toLowerCase();
-                const unitText = row.querySelector('.cargo-unit').textContent.toLowerCase();
+                // Buscamos las clases específicas primero
+                const cargoNameElement = row.querySelector('.cargo-name');
+                
+                let textToSearch = "";
 
-                if (cargoText.includes(searchTerm) || unitText.includes(searchTerm)) {
+                // Si existen las clases, extraemos solo sus textos
+                if (cargoNameElement) {
+                    textToSearch = cargoNameElement.textContent.toLowerCase();
+                } else {
+                    // CONTINGENCIA: Si Django alteró el DOM, leemos todo el contenido de texto de la fila
+                    // Exceptuando el texto de los selects de estado para evitar falsos positivos
+                    textToSearch = row.textContent.toLowerCase();
+                }
+
+                // Evaluamos si el término coincide
+                if (textToSearch.includes(searchTerm)) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -256,6 +255,68 @@ document.addEventListener('DOMContentLoaded', function() {
             if (totalCountSpan) totalCountSpan.textContent = visibleCount;
         });
     }
+
+    // =================================================================
+    // NUEVA FUNCIONALIDAD: INTERCEPCIÓN Y LOADING DEL FORMULARIO (NUEVO)
+    // =================================================================
+    const formPersona = document.getElementById('formPersona');
+    if (formPersona) {
+        formPersona.addEventListener('submit', function(e) {
+            // Validar que las restricciones nativas (required, email) se cumplan antes de mostrar SweetAlert
+            if (formPersona.checkValidity()) {
+                Swal.fire({
+                    title: 'Guardando datos...',
+                    html: 'Por favor, espera un momento mientras registramos los cambios.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+    }
+
+    // =================================================================
+    // NUEVA FUNCIONALIDAD: SISTEMA DE NOTIFICACIONES DJANGO (NUEVO)
+    // =================================================================
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Operación Exitosa!',
+                    text: "{{ message }}",
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            {% elif message.tags == 'error' %}
+                let textoError = "{{ message }}";
+                
+                // Manejo de errores controlados desde el backend (ej: identificaciones duplicadas o restricciones)
+                if (textoError === "error_relacion_persona" || textoError.includes("protected")) {
+                    textoError = "No es posible eliminar a esta persona porque se encuentra vinculada a eventos o asistencias activas.";
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo completar la acción',
+                    text: textoError,
+                    confirmButtonColor: 'rgb(75, 93, 220)'
+                });
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    // Manejo del estado de duplicados enviado a través del contexto de la vista si aplica
+    {% if status == 'error_duplicado' %}
+        Swal.fire({
+            icon: 'error',
+            title: 'Identificación Duplicada',
+            text: 'Ya existe una persona registrada con este número de identificación.',
+            confirmButtonColor: 'rgb(75, 93, 220)'
+        });
+    {% endif %}
 });
+
 </script>
 {% endblock %}
