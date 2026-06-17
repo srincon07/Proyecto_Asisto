@@ -122,8 +122,32 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-# Por defecto, usamos almacenamiento local (Windows)
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# 1. Definimos si usamos S3 o Local según una variable en tu .env (ej. USE_S3=True)
+# Si no existe la variable, por defecto usará False (para tu entorno local)
+USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
+
+if USE_S3:
+    # Configuración de almacenamiento para PRODUCCIÓN (AWS S3)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    # Configuración de almacenamiento para DESARROLLO (Tu PC local en Windows)
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -135,9 +159,6 @@ if 'AWS_STORAGE_BUCKET_NAME' in os.environ:
 
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_DEFAULT_ACL = 'public-read'
-
-    # Esto le dice a Django que use S3 para los archivos subidos por usuarios
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
     # La URL de tus archivos media ahora apuntará a S3 automáticamente
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
@@ -154,5 +175,3 @@ AUTH_USER_MODEL = "PersonasApp.Persona"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "EstructuraApp:inicio"
 LOGOUT_REDIRECT_URL = "login"
-
-AWS_DEFAULT_ACL = 'public-read'
