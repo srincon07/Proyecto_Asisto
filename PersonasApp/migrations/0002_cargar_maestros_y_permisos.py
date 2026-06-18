@@ -37,6 +37,7 @@ def crear_datos_maestros_y_permisos(apps, schema_editor):
     # STEP 4: Crear Roles Maestros de Negocio
     Rol.objects.get_or_create(nombre_role='Administrador')
     Rol.objects.get_or_create(nombre_role='Organizador')
+    Rol.objects.get_or_create(nombre_role='Lector-Asistencia')
 
     # STEP 5: Crear Grupos técnicos de Django y mapear permisos nativos
     grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
@@ -67,7 +68,7 @@ def revertir_maestros(apps, schema_editor):
 
     # Al borrar la organización en cascada (si tus on_delete lo permiten) o de forma manual:
     Organizacion.objects.filter(nombre_organizacion='Organización Principal').delete()
-    Rol.objects.filter(nombre_role__in=['Administrador', 'Organizador']).delete()
+    Rol.objects.filter(nombre_role__in=['Administrador', 'Organizador', 'Lector-Asistencia']).delete()
     Group.objects.filter(name__in=['Administrador', 'Organizador']).delete()
 
 

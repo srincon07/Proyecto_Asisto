@@ -16,3 +16,12 @@ def requerir_rol_organizador(view_func):
             return view_func(request, *args, **kwargs)
         raise PermissionDenied # Lanza un error 403
     return _wrapped_view_func
+
+
+def requerir_rol_lector_asistencia(view_func):
+    def _wrapped_view_func(request, *args, **kwargs):
+        # request.user tendrá acceso si tiene el rol Lector-Asistencia
+        if request.user.is_authenticated and request.user.es_lector_asistencia:
+            return view_func(request, *args, **kwargs)
+        raise PermissionDenied # Lanza un error 403
+    return _wrapped_view_func

@@ -4,16 +4,17 @@ from . import views
 app_name = "EstructuraApp"
 
 urlpatterns = [
-    path("", views.inicio, name="inicio"),
+    path("", views.index, name="index"),
+    path("gestion/", views.landing, name="landing"),
     # Rutas para Objetivos y Líneas
-    path("gestion/", views.gestionar_estructura, name="gestion_estructura"),
+    path("estructura/", views.gestionar_estructura, name="gestion_estructura"),
     path(
-        "gestion/editar/<str:edit_tipo>/<int:pk>/",
+        "estructura/editar/<str:edit_tipo>/<int:pk>/",
         views.gestionar_estructura,
         name="editar_estructura",
     ),
     path(
-        "gestion/eliminar/<str:edit_tipo>/<int:pk>/",
+        "estructura/eliminar/<str:edit_tipo>/<int:pk>/",
         views.eliminar_estructura,
         name="eliminar_estructura",
     ),

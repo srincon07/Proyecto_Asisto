@@ -106,6 +106,10 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     @property
     def es_organizador(self):
         return self.roles.filter(nombre_role='Organizador').exists() or self.is_superuser
+    
+    @property
+    def es_lector_asistencia(self):
+        return self.roles.filter(nombre_role='Lector-Asistencia').exists()
 
 
 class PersonaRol(models.Model):

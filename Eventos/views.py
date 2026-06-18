@@ -25,7 +25,7 @@ from EstructuraApp.models import (
     Objetivo,
     Cargo,
 )
-from PersonasApp.decorators import requerir_rol_organizador, requerir_rol_administrador
+from PersonasApp.decorators import requerir_rol_organizador, requerir_rol_administrador, requerir_rol_lector_asistencia
 from .forms import (
     ActividadProgramadaForm,
     CargaMasivaAsistentesForm,
@@ -66,8 +66,6 @@ def programar_actividad(request, pk=None):
     return render(request, "Eventos/programar_actividad.html", context)
 
 @login_required
-@requerir_rol_organizador
-# @permission_required(('Eventos.view_actividadprogramada'), raise_exception=True)
 def lista_eventos(request):
     actividades = ActividadProgramada.objects.select_related(
         "id_tipo_actividad", "id_responsable"

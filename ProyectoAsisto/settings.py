@@ -173,5 +173,5 @@ EMAIL_USE_TLS=env("EMAIL_USE_TLS")
 AUTH_USER_MODEL = "PersonasApp.Persona"
 
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "EstructuraApp:inicio"
-LOGOUT_REDIRECT_URL = "login"
+LOGIN_REDIRECT_URL = "EstructuraApp:landing"
+LOGOUT_REDIRECT_URL = "EstructuraApp:index"

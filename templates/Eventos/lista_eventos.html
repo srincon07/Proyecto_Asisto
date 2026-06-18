@@ -8,14 +8,16 @@
     <!-- Encabezado de la Agenda -->
     <div class="d-flex justify-content-between align-items-center custom-header p-3 shadow-sm rounded mb-4">
         <div class="d-flex align-items-center">
-            <a href="{% url 'EstructuraApp:inicio' %}" class="btn btn-outline-light me-3" title="Volver al Menú Principal">
+            <a href="{% url 'EstructuraApp:landing' %}" class="btn btn-outline-light me-3" title="Volver al Menú Principal">
                 <i class="bi bi-house-door-fill"></i>
             </a>
             <h2 class="m-0 h4 fw-bold">Agenda Institucional</h2>
         </div>
+        {% if not request.user.es_lector_asistencia %}
         <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold d-flex align-items-center">
             <i class="bi bi-plus-circle me-2"></i> Nueva Actividad
         </a>
+        {% endif %}
     </div>
 
     <!-- Tabla de Contenido -->
@@ -57,6 +59,7 @@
                                 </span><br>
                                 
                                 {% if row.asistencia_url %}
+                                    {% if not request.user.es_lector_asistencia %}
                                     <button type="button" 
                                             class="btn btn-primary py-0 btn-qr" 
                                             style="font-size: 0.7rem; padding: 2px 8px;"
@@ -64,6 +67,7 @@
                                             data-link="{{ row.asistencia_url|escape }}">
                                         <i class="bi bi-qr-code-scan"></i> {{ row.aux_btn_txt }}
                                     </button>
+                                    {% endif %}
                                 {% else %}
                                     {% if row.estado_txt == 'PROGRAMADA' and row.requiere_preregistro %}
                                         <small class="text-muted d-block" style="font-size: 0.65rem;">
@@ -91,6 +95,7 @@
                             </td>
 
                             <td class="text-center">
+                                {% if not request.user.es_lector_asistencia %}
                                 <div class="btn-group shadow-sm">
                                     <a href="{% url 'Eventos:panel_asistentes_actividad' row.id %}" class="btn btn-sm btn-info text-white" title="Ver Asistentes">
                                         <i class="bi bi-people-fill"></i>
@@ -103,6 +108,7 @@
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>
                                 </div>
+                                {% endif %}
                                 
                                 <!-- Formulario oculto por cada fila para procesar el borrado seguro via POST -->
                                 <form id="form-eliminar-{{ row.id }}" action="{% url 'Eventos:eliminar_actividad' row.id %}" method="POST" style="display: none;">

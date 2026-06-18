@@ -157,7 +157,12 @@ def api_get_jerarquia(request):
     return JsonResponse([], safe=False)
 
 @login_required
-def inicio(request):
+def landing(request):
+    
+    # Si el usuario tiene el rol específico, lo mandamos directo a su herramienta
+    if request.user.es_lector_asistencia:
+        return redirect('Eventos:lista_eventos')
+    
     ahora = timezone.now()
 
     context = {
@@ -177,4 +182,7 @@ def inicio(request):
         "total_lineas": Linea.objects.count(),
         "total_personas_registradas": Persona.objects.count()
     }
-    return render(request, "EstructuraApp/inicio.html", context)
+    return render(request, "EstructuraApp/landing.html", context)
+
+def index(request):
+    return render(request, 'index.html')
