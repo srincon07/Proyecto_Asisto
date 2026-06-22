@@ -168,7 +168,7 @@
                                 </select>
                             </div>
                             
-                            <button type="button" class="btn btn-success btn-lg w-100 rounded-3 shadow fw-bold" id="btnRegistrarFinal">
+                            <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnRegistrarFinal">
                                 <i class="bi bi-check-circle-fill me-2"></i>Finalizar Registro
                             </button>
                         </div>
@@ -199,6 +199,7 @@
     <!-- Lógica de Control de Flujo con Vanilla JS -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            
             const btnSiguiente = document.getElementById('btnSiguiente');
             const btnValidarPin = document.getElementById('btnValidarPin');
             const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
@@ -210,6 +211,15 @@
             const fDoc = document.getElementById('fDoc');
             const inputAccion = document.getElementById('inputAccion');
             const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const loadingConfig = {
+                title: 'Guardando datos...',
+                html: 'Por favor, espera un momento.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            };
 
             // --- PASO 1: VERIFICAR IDENTIFICACIÓN ---
             btnSiguiente.addEventListener('click', function() {
@@ -314,7 +324,20 @@
 
             
             // Función reutilizable para despachar datos por POST
+            // ... dentro del tag <script> existente
+
+            // Función mejorada para despachar datos
             function enviarFormulario(formData) {
+                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+                const btnValidarPin = document.getElementById('btnValidarPin');
+                
+                // 1. Deshabilitar botones para evitar múltiples clics
+                if(btnRegistrarFinal) btnRegistrarFinal.disabled = true;
+                if(btnValidarPin) btnValidarPin.disabled = true;
+
+                // 2. Lanzar la alerta de carga (ya la tienes configurada en loadingConfig)
+                Swal.fire(loadingConfig);
+
                 fetch(`{% url 'Eventos:procesar_asistencia_ajax' actividad.id %}`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': token },
@@ -322,11 +345,28 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    // 3. Ocultar el loading y manejar la respuesta
                     if(data.status === 'success') {
-                        Swal.fire('Asistencia registrada correctamente.', data.message, 'success').then(() => location.reload());
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: data.message,
+                            allowOutsideClick: false,
+                            confirmButtonColor: '#1e2b58',
+                        }).then(() => location.reload());
                     } else {
+                        // Re-habilitar botones en caso de error para que el usuario pueda corregir
+                        if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
+                        if(btnValidarPin) btnValidarPin.disabled = false;
+                        
                         Swal.fire('Error', data.message, 'error');
                     }
+                })
+                .catch(error => {
+                    // Manejo de errores de red
+                    if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
+                    if(btnValidarPin) btnValidarPin.disabled = false;
+                    Swal.fire('Error', 'Ocurrió un problema de conexión. Intente nuevamente.', 'error');
                 });
             }
         });
