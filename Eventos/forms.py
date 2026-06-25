@@ -81,8 +81,8 @@ class ActividadProgramadaForm(forms.ModelForm):
         # Nota: Ajusta 'roles__nombre_rol' según cómo se llamen los campos relacionales en tu PersonasApp
         responsables_filtrados = (
             Persona.objects.filter(
-                Q(roles__nombre_role__icontains="Administrador")
-                | Q(roles__nombre_role__icontains="Organizador")
+                Q(groups__name__icontains="Administrador")
+                | Q(groups__name__icontains="Organizador")
             )
             .distinct()
             .order_by("nombres")

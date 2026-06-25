@@ -16,16 +16,17 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import Group
 from Eventos.models import (
     ActividadProgramada,
     RegistroAsistencia,
 )
-from PersonasApp.models import Persona, Rol, Discapacidad, PersonaCargo
+from PersonasApp.models import Persona, Discapacidad, PersonaCargo
 from EstructuraApp.models import (
     Objetivo,
     Cargo,
 )
-from PersonasApp.decorators import requerir_rol_organizador, requerir_rol_administrador, requerir_rol_lector_asistencia
+from PersonasApp.decorators import es_miembro_grupo
 from .forms import (
     ActividadProgramadaForm,
     CargaMasivaAsistentesForm,
@@ -34,7 +35,7 @@ from .services import obtener_datos_dashboard
 
 
 @login_required
-@requerir_rol_organizador
+@es_miembro_grupo('Organizador')
 def programar_actividad(request, pk=None):
     instancia = get_object_or_404(ActividadProgramada, pk=pk) if pk else None
     titulo = "Editar Actividad" if pk else "Programar Actividad"
@@ -117,7 +118,7 @@ def lista_eventos(request):
     return render(request, "Eventos/lista_eventos.html", {"actividades": actividades})
 
 @login_required
-@requerir_rol_organizador
+@es_miembro_grupo('Organizador')
 def eliminar_actividad(request, pk):
     actividad = get_object_or_404(ActividadProgramada, pk=pk)
     ahora = timezone.now()
@@ -140,7 +141,7 @@ def eliminar_actividad(request, pk):
 
 # 2. VISTA INTERNA: Llamada desde el botón del listado de eventos para ver quién asistió
 @login_required
-@requerir_rol_organizador
+@es_miembro_grupo('Organizador')
 def panel_asistentes_actividad(request, actividad_id):
     # 1. Traemos la actividad resolviendo toda la cadena de llaves foráneas hasta Organización
     actividad = get_object_or_404(
@@ -186,9 +187,9 @@ def panel_asistentes_actividad(request, actividad_id):
 # ENDPOINT AUXILARIO: Obtener roles disponibles para el formulario
 @login_required
 def obtener_roles_disponibles(request):
-    roles = Rol.objects.all().order_by("nombre_role")
+    roles = Group.objects.all().order_by("nombre_role")
     return JsonResponse(
-        {"roles": [{"id": rol.id, "nombre": rol.nombre_role} for rol in roles]}
+        {"roles": [{"id": rol.id, "nombre": rol.name} for rol in roles]}
     )
 
 
@@ -880,7 +881,7 @@ def validar_codigo_asistencia_ajax(request, actividad_id):
         )
 
 @login_required
-@requerir_rol_organizador
+@es_miembro_grupo('Organizador')
 def importar_asistentes_csv(request, actividad_id):
     actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
 
@@ -1051,7 +1052,7 @@ def importar_asistentes_csv(request, actividad_id):
     )
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def api_indicadores(request):
     data = obtener_datos_dashboard()
     return JsonResponse(data, safe=False)
@@ -1059,7 +1060,7 @@ def api_indicadores(request):
 # Eventos/views.py
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def dashboard_view(request):
     """Esta vista simplemente carga el archivo HTML del dashboard."""
     return render(request, 'Eventos/dashboard.html')

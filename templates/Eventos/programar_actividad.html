@@ -7,7 +7,7 @@
     <div class="card shadow border-0 mx-auto" style="max-width: 900px;">
         <div class="card-header custom-header text-white d-flex justify-content-between align-items-center py-3">
             <h4 class="m-0 fw-bold"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h4>
-            <a href="{% url 'EstructuraApp:landing' %}" class="btn btn-outline-secondary me-3" title="Volver al Menú Principal">
+            <a href="{% url 'EstructuraApp:landing' %}" class="btn btn-outline-light me-3" title="Volver al Menú Principal">
                 <i class="bi bi-house-door-fill"></i>
             </a>
         </div>
@@ -42,11 +42,6 @@
                             <label class="form-label small fw-bold text-uppercase">3. Tipo de Actividad</label>
                             {{ form.id_tipo_actividad }}
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase text-muted">PIN de Confirmación</label>
-                            {{ form.pin_confirmacion }}
-                        </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-uppercase">Nombre del Evento</label>
                             {{ form.nombre_evento }}
@@ -56,15 +51,15 @@
                             <label class="form-label small fw-bold text-uppercase">Responsable</label>
                             {{ form.id_responsable }}
                         </div>
-                    </div>
-
-                    <!-- Bloque Datos del Evento Derecho -->
-                    <div class="col-md-6">
 
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-uppercase">Lugar de Desarrollo</label>
                             {{ form.lugar_desarrollo }}
                         </div>
+                    </div>
+
+                    <!-- Bloque Datos del Evento Derecho -->
+                    <div class="col-md-6">
 
                         <div class="row">
                             <div class="col-6 mb-3">
@@ -88,14 +83,14 @@
                             <div class="form-check form-switch">
                                 {% if evento and evento.asistencias.exists %}
                                     {{ form.requiere_preregistro }}
-                                    <label class="form-check-label fw-bold text-muted" for="id_requiere_preregistro">¿Requiere Preregistro previo?</label>
+                                    <label class="form-check-label fw-bold text-muted" for="id_requiere_preregistro">¿Requiere Preregistro?</label>
                                     <div class="form-text text-warning small">
                                         <i class="bi bi-exclador-triangle-fill me-1"></i> No se puede modificar: Este evento ya cuenta con asistentes registrados.
                                     </div>
                                     <input type="hidden" name="requiere_preregistro" value="{% if evento.requiere_preregistro %}on{% else %}off{% endif %}">
                                 {% else %}
                                     {{ form.requiere_preregistro }}
-                                    <label class="form-check-label fw-bold" for="id_requiere_preregistro">¿Requiere Preregistro previo?</label>
+                                    <label class="form-check-label fw-bold" for="id_requiere_preregistro">¿Requiere Preregistro?</label>
                                 {% endif %}
                             </div>
                         </div>
@@ -109,7 +104,7 @@
                             </div>
                             <div class="form-check form-switch">
                                 {{ form.permite_qr_invertido }}
-                                <label class="form-check-label small fw-bold" for="id_permite_qr_invertido">Generar pase digital (QR Invertido) al asistente</label>
+                                <label class="form-check-label small fw-bold" for="id_permite_qr_invertido">Generar pase digital al asistente</label>
                             </div>
                         </div>
 
@@ -126,6 +121,11 @@
                                     <span class="input-group-text">minutos</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-uppercase text-muted">PIN de Confirmación</label>
+                            {{ form.pin_confirmacion }}
                         </div>
                         
                         {% if cargue_masivo %}

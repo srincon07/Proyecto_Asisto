@@ -1,5 +1,6 @@
 from django import forms
-from .models import Persona, Rol, PersonaRol, Discapacidad, PersonaCargo
+from django.contrib.auth.models import Group
+from .models import Persona, Discapacidad, PersonaCargo
 from EstructuraApp.models import Cargo
 
 
@@ -54,15 +55,16 @@ class PersonaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Traemos todos los roles de la BD para generar los campos dinámicos
-        self.roles_db = Rol.objects.all().order_by("nombre_role")
+        # Traemos todos los grupos de la BD para generar los campos dinámicos
+        self.groups_db = Group.objects.all().order_by("name")
 
-        for rol in self.roles_db:
-            # Checkbox para el rol
-            self.fields[f"rol_{rol.id}"] = forms.BooleanField(
+        for group in self.groups_db:
+            # Checkbox para el grupo
+            self.fields[f"group_{group.id}"] = forms.BooleanField(
                 required=False,
+                label=group.name,
                 widget=forms.CheckboxInput(
-                    attrs={"class": "form-check-input", "id": f"role_{rol.id}"}
+                    attrs={"class": "form-check-input", "id": f"group_{group.id}"}
                 ),
             )
 
@@ -72,6 +74,7 @@ class PersonaForm(forms.ModelForm):
             # Checkbox para el cargo
             self.fields[f"cargo_{cargo.id}"] = forms.BooleanField(
                 required=False,
+                label = cargo.nombre_cargo,
                 widget=forms.CheckboxInput(
                     attrs={"class": "form-check-input", "id": f"cargo_{cargo.id}"}
                 ),
@@ -84,10 +87,9 @@ class PersonaForm(forms.ModelForm):
 
         # Si estamos editando, precargamos los valores existentes
         if self.instance and self.instance.pk:
-            roles_asignados = PersonaRol.objects.filter(persona=self.instance)
-            for p_rol in roles_asignados:
-                self.initial[f"rol_{p_rol.rol.id}"] = True
-
+            for group in self.instance.groups.all():
+                self.initial[f"group_{group.id}"] = True
+                
             cargos_asignados = PersonaCargo.objects.filter(persona=self.instance)
             for p_cargo in cargos_asignados:
                 self.initial[f"cargo_{p_cargo.cargo.id}"] = True
@@ -96,12 +98,14 @@ class PersonaForm(forms.ModelForm):
     def save(self, commit=True):
         persona = super().save(commit=commit)
 
-        # Limpiar y reinsertar relaciones m2m intermedias
-        PersonaRol.objects.filter(persona=persona).delete()
-
-        for rol in self.roles_db:
-            if self.cleaned_data.get(f"rol_{rol.id}"):
-                PersonaRol.objects.create(persona=persona, rol=rol)
+        # GESTIÓN DE GRUPOS (Reemplaza a PersonaRol)
+        grupos_seleccionados = []
+        for group in self.groups_db:
+            if self.cleaned_data.get(f"group_{group.id}"):
+                grupos_seleccionados.append(group)
+        
+        # Django hace el trabajo sucio automáticamente con .set()
+        persona.groups.set(grupos_seleccionados)
 
         # Limpiar y reinsertar relaciones m2m intermedias para cargos
         PersonaCargo.objects.filter(persona=persona).delete()

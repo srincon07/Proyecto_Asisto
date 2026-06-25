@@ -8,15 +8,26 @@
     <!-- Encabezado de la Agenda -->
     <div class="d-flex justify-content-between align-items-center custom-header p-3 shadow-sm rounded mb-4">
         <div class="d-flex align-items-center">
+        {% if request.user.es_admin or request.user.is_superuser %}
             <a href="{% url 'EstructuraApp:landing' %}" class="btn btn-outline-light me-3" title="Volver al Menú Principal">
                 <i class="bi bi-house-door-fill"></i>
             </a>
+        {% else %}
+            <div>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm fw-bold" title="Cerrar Sesión">
+                    <i class="bi bi-box-arrow-left me-1"></i>
+                </button>
+            </form>
+            </div>
+        {% endif %}
             <h2 class="m-0 h4 fw-bold">Agenda Institucional</h2>
         </div>
-        {% if not request.user.es_lector_asistencia %}
-        <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold d-flex align-items-center">
-            <i class="bi bi-plus-circle me-2"></i> Nueva Actividad
-        </a>
+        {% if request.user.es_admin or request.user.es_organizador or request.user.is_superuser %}
+            <a href="{% url 'Eventos:programar_actividad' %}" class="btn btn-sm btn-light shadow-sm text-primary fw-bold d-flex align-items-center">
+                <i class="bi bi-plus-circle me-2"></i> Nueva Actividad
+            </a>
         {% endif %}
     </div>
 
@@ -59,7 +70,7 @@
                                 </span><br>
                                 
                                 {% if row.asistencia_url %}
-                                    {% if not request.user.es_lector_asistencia %}
+                                    {% if request.user.es_admin or request.user.es_organizador or request.user.is_superuser %}
                                     <button type="button" 
                                             class="btn btn-primary py-0 btn-qr" 
                                             style="font-size: 0.7rem; padding: 2px 8px;"
@@ -95,7 +106,7 @@
                             </td>
 
                             <td class="text-center">
-                                {% if not request.user.es_lector_asistencia %}
+                                {% if request.user.es_admin or request.user.es_organizador or request.user.is_superuser %}
                                 <div class="btn-group shadow-sm">
                                     <a href="{% url 'Eventos:panel_asistentes_actividad' row.id %}" class="btn btn-sm btn-info text-white" title="Ver Asistentes">
                                         <i class="bi bi-people-fill"></i>

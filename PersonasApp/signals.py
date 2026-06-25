@@ -1,50 +1,28 @@
 # PersonasApp/signals.py
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
-from django.contrib.auth.models import Group, Permission
-from .models import PersonaRol, Persona
+from django.contrib.auth.models import Group
+from .models import Persona
 
-@receiver(post_save, sender=PersonaRol)
-@receiver(post_delete, sender=PersonaRol)
-def actualizar_permisos_por_cambio_rol(sender, instance, **kwargs):
+@receiver(m2m_changed, sender=Persona.groups.through)
+def actualizar_is_staff_por_grupo(sender, instance, action, reverse, model, pk_set, **kwargs):
     """
-    Esta señal se ejecutará SIEMPRE, tanto si guardas desde el Frontend 
-    como si modificas los inlines en el Admin de Django.
+    Se ejecuta cuando se añaden o eliminan grupos de una Persona.
+    'instance' es la persona afectada.
+    'action' indica qué sucedió ('post_add', 'post_remove', 'post_clear').
     """
-    # instance representa la fila de PersonaRol que se acaba de crear/borrar
-    persona = instance.persona 
     
-    # 1. Obtener los nombres de los roles actuales de la persona
-    roles_actuales = [r.nombre_role for r in persona.roles.all()]
-    
-    # 2. Asegurar Grupos
-    grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
-    grupo_organizador, _ = Group.objects.get_or_create(name='Organizador')
-
-    # 3. Poblar permisos si están vacíos en la BD (Blindaje de post-migración)
-    todos_los_permisos = Permission.objects.all()
-    if grupo_admin.permissions.count() == 0:
-        permisos_admin = [
-            p for p in todos_los_permisos 
-            if p.content_type.app_label in ['EstructuraApp', 'Eventos'] 
-            and p.content_type.model != 'organizacion'
-        ]
-        grupo_admin.permissions.set(permisos_admin)
-
-    if grupo_organizador.permissions.count() == 0:
-        permisos_organizador = [
-            p for p in todos_los_permisos 
-            if p.content_type.app_label == 'Eventos'
-        ]
-        grupo_organizador.permissions.set(permisos_organizador)
-
-    # 4. Sincronizar membresías del grupo nativo de Django
-    if 'Administrador' in roles_actuales:
-        grupo_admin.user_set.add(persona)
-    else:
-        grupo_admin.user_set.remove(persona)
-
-    if 'Organizador' in roles_actuales:
-        grupo_organizador.user_set.add(persona)
-    else:
-        grupo_organizador.user_set.remove(persona)
+    # Solo procesamos si la acción implica cambios en la relación
+    if action in ['post_add', 'post_remove', 'post_clear']:
+        
+        # Obtenemos el grupo "Administrador"
+        grupo_admin = Group.objects.filter(name='Administrador').first()
+        
+        if grupo_admin:
+            # Verificamos si la persona pertenece al grupo Administrador
+            es_admin = instance.groups.filter(name='Administrador').exists()
+            
+            # Si el estado de is_staff no coincide con la membresía, actualizamos
+            if instance.is_staff != es_admin:
+                instance.is_staff = es_admin
+                instance.save(update_fields=['is_staff'])

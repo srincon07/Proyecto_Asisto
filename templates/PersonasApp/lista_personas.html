@@ -73,12 +73,12 @@
                             </td>
                             <td>
                                 <small>
-                                    {% for pr in persona.personarol_set.all %}
+                                    {% for group in persona.groups.all %}
                                         <div class="mb-1 text-primary">
-                                            <strong>{{ pr.rol.nombre_role }}</strong>
+                                            <strong>{{ group.name }}</strong>
                                         </div>
                                     {% empty %}
-                                        <span class="text-muted fst-italic small">Sin roles</span>
+                                        <span class="text-muted fst-italic small">Sin grupos asignados</span>
                                     {% endfor %}
                                 </small>
                             </td>

@@ -1,27 +1,8 @@
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import user_passes_test
 
-def requerir_rol_administrador(view_func):
-    def _wrapped_view_func(request, *args, **kwargs):
-        # request.user tendrá acceso si es superusuario o tiene el rol Administrador
-        if request.user.is_authenticated and request.user.es_administrador:
-            return view_func(request, *args, **kwargs)
-        raise PermissionDenied # Lanza un error 403
-    return _wrapped_view_func
+def es_miembro_grupo(group_name):
+    return user_passes_test(lambda u: u.groups.filter(name=group_name).exists() or u.is_superuser)
 
-
-def requerir_rol_organizador(view_func):
-    def _wrapped_view_func(request, *args, **kwargs):
-        # request.user tendrá acceso si tiene el rol Organizador
-        if request.user.is_authenticated and request.user.es_organizador:
-            return view_func(request, *args, **kwargs)
-        raise PermissionDenied # Lanza un error 403
-    return _wrapped_view_func
-
-
-def requerir_rol_lector_asistencia(view_func):
-    def _wrapped_view_func(request, *args, **kwargs):
-        # request.user tendrá acceso si tiene el rol Lector-Asistencia
-        if request.user.is_authenticated and request.user.es_lector_asistencia:
-            return view_func(request, *args, **kwargs)
-        raise PermissionDenied # Lanza un error 403
-    return _wrapped_view_func
+# Uso en views.py:
+# @es_miembro_grupo('Administrador')
+# def lista_personas(request): ...

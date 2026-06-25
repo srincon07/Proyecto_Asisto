@@ -2,17 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from EstructuraApp.models import Cargo
 
-
-class Rol(models.Model):
-    nombre_role = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.nombre_role
-
-    class Meta:
-        verbose_name_plural = "Roles"
-
-
 class Discapacidad(models.Model):
     OPCIONES_ESTADO = [
         ("Activo", "Activo"),
@@ -84,7 +73,6 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False) # Permite el ingreso al backend administrativo
     
     # Relación muchos a muchos usando la tabla intermedia personalizada
-    roles = models.ManyToManyField(Rol, through="PersonaRol", related_name="personas")
     cargos = models.ManyToManyField(
         Cargo, through="PersonaCargo", related_name="personas"
     )
@@ -100,28 +88,12 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     
     # Helpers de acceso rápido para control en Vistas de la aplicación
     @property
-    def es_administrador(self):
-        return self.roles.filter(nombre_role='Administrador').exists() or self.is_superuser
-
-    @property
-    def es_organizador(self):
-        return self.roles.filter(nombre_role='Organizador').exists() or self.is_superuser
+    def es_admin(self):
+        return self.groups.filter(name='Administrador').exists()
     
     @property
-    def es_lector_asistencia(self):
-        return self.roles.filter(nombre_role='Lector-Asistencia').exists()
-
-
-class PersonaRol(models.Model):
-    persona = models.ForeignKey(Persona, on_delete=models.CASCADE)
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = (
-            "persona",
-            "rol",
-        )  # Evita duplicar el mismo rol en la misma persona
-
+    def es_organizador(self):
+        return self.groups.filter(name='Organizador').exists()
 
 class PersonaCargo(models.Model):
 

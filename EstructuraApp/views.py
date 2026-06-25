@@ -10,7 +10,7 @@ from .models import (
     TipoActividad,
 )
 from PersonasApp.models import Persona  # <-- Importación cruzada limpia entre Apps
-from PersonasApp.decorators import requerir_rol_administrador  # Decorador personalizado para control de acceso basado en roles
+from PersonasApp.decorators import es_miembro_grupo  # Decorador personalizado para control de acceso basado en roles
 from Eventos.models import (
     ActividadProgramada,
 )  # <-- Importación cruzada limpia entre Apps
@@ -21,7 +21,7 @@ from .forms import (
 )  # Formularios creados con ModelForm
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def gestionar_estructura(request, edit_tipo=None, pk=None):
     # 1. Lógica para cargar datos en caso de edición
     obj_instancia = None
@@ -73,7 +73,7 @@ def gestionar_estructura(request, edit_tipo=None, pk=None):
     return render(request, "EstructuraApp/registro_estructura.html", context)
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def gestionar_tipos(request, pk=None):
     # Lógica de carga para edición (Equivalente al IF de tu PHP)
     instancia = get_object_or_404(TipoActividad, pk=pk) if pk else None
@@ -102,7 +102,7 @@ def gestionar_tipos(request, pk=None):
 
 # Vista complementaria para eliminar de forma segura
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def eliminar_tipo(request, pk):
     tipo = get_object_or_404(TipoActividad, pk=pk)
     try:
@@ -114,7 +114,7 @@ def eliminar_tipo(request, pk):
     return redirect("EstructuraApp:gestionar_tipos")
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def eliminar_estructura(request, edit_tipo, pk):
     if edit_tipo == "obj":
         instancia = get_object_or_404(Objetivo, pk=pk)
@@ -159,8 +159,8 @@ def api_get_jerarquia(request):
 @login_required
 def landing(request):
     
-    # Si el usuario tiene el rol específico, lo mandamos directo a su herramienta
-    if request.user.es_lector_asistencia:
+    # Verifica si el usuario tiene el permiso de cambiar asistencia
+    if not request.user.es_admin and not request.user.is_superuser:
         return redirect('Eventos:lista_eventos')
     
     ahora = timezone.now()
@@ -174,7 +174,7 @@ def landing(request):
         ).count(),
         # Nueva métrica leyendo directamente desde la otra aplicación
         "total_responsables": Persona.objects.filter(
-            roles__nombre_role__in=["Administrador", "Organizador"]
+            groups__name__in=["Administrador", "Organizador", "Lectro-Asistencia"]
         )
         .distinct()
         .count(),

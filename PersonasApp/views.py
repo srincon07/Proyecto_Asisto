@@ -1,25 +1,25 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from .models import Persona
 from django.contrib import messages
 from .forms import PersonaForm
-from .decorators import requerir_rol_administrador  # Importación de decoradores personalizados
+from .decorators import es_miembro_grupo  # Importación de decoradores personalizados
 
 
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def lista_personas(request):
     # Consulta optimizada ordenando por las nuevas columnas independientes
     personas = (
-        Persona.objects.all()
-        .prefetch_related("personarol_set__rol")
+        Persona.objects.filter(is_superuser=False)
+        .prefetch_related("groups")
         .order_by("nombres", "apellidos")
     )
     return render(request, "PersonasApp/lista_personas.html", {"personas": personas})
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def registrar_editar_persona(request, pk=None):
     if pk:
         persona = get_object_or_404(Persona, pk=pk)
@@ -47,7 +47,7 @@ def registrar_editar_persona(request, pk=None):
     )
 
 @login_required
-@requerir_rol_administrador
+@es_miembro_grupo('Administrador')
 def eliminar_persona(request, pk):
     persona = get_object_or_404(Persona, pk=pk)
     
