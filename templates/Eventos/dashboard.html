@@ -21,6 +21,16 @@
         </div>
     </div>
 
+    <!-- Añadir al inicio del cuerpo, sobre las tarjetas de KPIs -->
+    <div class="mb-4">
+        <select id="filtroEvento" class="form-select shadow-sm" onchange="cargarDatos(this.value)">
+            <option value="">Todos los eventos (Global)</option>
+            {% for e in eventos %}
+                <option value="{{ e.id }}">{{ e.nombre_evento }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100">
@@ -109,21 +119,29 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const primaryColor = '#1e2b58';
-        const secondaryColor = '#58bac5';
-        
-        // Fecha de última actualización
-        document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
 
-        fetch("{% url 'Eventos:api_indicadores' %}")
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const primaryColor = '#1e2b58';
+    const secondaryColor = '#58bac5';
+    let charts = {}; // Para guardar instancias y destruirlas
+
+    function cargarDatos(eventoId) {
+        let url = "{% url 'Eventos:api_indicadores' %}";
+        if (eventoId) url += "?evento_id=" + eventoId;
+
+        fetch(url)
             .then(res => res.json())
             .then(data => {
-                console.log("Datos recibidos para KPIs:", data); // ¡MIRA LA CONSOLA!
+                document.getElementById('lastUpdate').innerText = data.updated_at;
+                
+                // Destruir gráficos existentes antes de crear nuevos
+                ['chartEstado', 'chartTipo', 'chartTendencia'].forEach(id => {
+                    if (charts[id]) charts[id].destroy();
+                });
 
-                // 1. CÁLCULO DE KPIs
+                // CÁLCULO DE KPIs
                 // Sumamos todos los registros (Registrados + Confirmados)
                 const total = data.estado.reduce((acc, curr) => acc + curr.cantidad, 0);
                 
@@ -140,7 +158,7 @@
                 document.getElementById('kpiTasa').innerText = tasa + '%';
 
                 // --- 1. GRÁFICA DE ESTADO (Doughnut) ---
-                new Chart(document.getElementById('chartEstado').getContext('2d'), {
+                charts['chartEstado'] = new Chart(document.getElementById('chartEstado').getContext('2d'), {
                     type: 'doughnut',
                     data: {
                         labels: data.estado.map(e => e.estado),
@@ -157,9 +175,8 @@
                         plugins: { legend: { position: 'bottom' } }
                     }
                 });
-
                 // --- 2. GRÁFICA DE TIPO (Bar) ---
-                new Chart(document.getElementById('chartTipo').getContext('2d'), {
+                charts['chartTipo'] = new Chart(document.getElementById('chartTipo').getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: data.tipo.map(t => t.id_tipo_actividad__nombre),
@@ -180,14 +197,12 @@
                         }
                     }
                 });
-
                 // --- 3. GRÁFICA DE TENDENCIA (Area) ---
                 const ctxTrend = document.getElementById('chartTendencia').getContext('2d');
                 const gradient = ctxTrend.createLinearGradient(0, 0, 0, 400);
                 gradient.addColorStop(0, 'rgba(30, 43, 88, 0.4)');
                 gradient.addColorStop(1, 'rgba(30, 43, 88, 0)');
-
-                new Chart(ctxTrend, {
+                charts['chartTendencia'] = new Chart(ctxTrend, {
                     type: 'line',
                     data: {
                         labels: data.tendencia.map(t => t.fecha),
@@ -212,8 +227,10 @@
                         }
                     }
                 });
-            })
-            .catch(err => console.error("Error cargando dashboard:", err));
-    });
+            });
+    }
+    
+    // Carga inicial
+    document.addEventListener("DOMContentLoaded", () => cargarDatos());
 </script>
 {% endblock %}

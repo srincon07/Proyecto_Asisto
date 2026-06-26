@@ -20,7 +20,7 @@
                     <!-- Bloque Jerárquico Izquierdo -->
                     <div class="col-md-6 border-end">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">1. Objetivo Estratégico</label>
+                            <label class="form-label small fw-bold">Objetivo Estratégico</label>
                             <select id="obj" class="form-select border-primary" onchange="cargarLineas(this.value)" required>
                                 <option value="">Seleccione Objetivo...</option>
                                 {% for o in objetivos %}
@@ -32,28 +32,28 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">2. Línea de Acción</label>
+                            <label class="form-label small fw-bold">Línea de Acción</label>
                             <select id="lin" class="form-select" onchange="cargarTipos(this.value)" required {% if not evento %}disabled{% endif %}>
                                 <option value="">Seleccione Línea...</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">3. Tipo de Actividad</label>
+                            <label class="form-label small fw-bold">Tipo de Actividad</label>
                             {{ form.id_tipo_actividad }}
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">Nombre del Evento</label>
+                            <label class="form-label small fw-bold">Nombre del Evento</label>
                             {{ form.nombre_evento }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">Responsable</label>
+                            <label class="form-label small fw-bold">Responsable</label>
                             {{ form.id_responsable }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">Lugar de Desarrollo</label>
+                            <label class="form-label small fw-bold">Lugar de Desarrollo</label>
                             {{ form.lugar_desarrollo }}
                         </div>
                     </div>
@@ -63,14 +63,14 @@
 
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Inicio</label>
+                                <label class="form-label small fw-bold text-muted">Inicio</label>
                                 {{ form.fecha_hora_inicio }}
                                 {% if form.fecha_hora_inicio.errors %}
                                     <div class="text-danger small mt-1">{{ form.fecha_hora_inicio.errors|striptags }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Fin</label>
+                                <label class="form-label small fw-bold text-muted">Fin</label>
                                 {{ form.fecha_hora_fin }}
                                 {% if form.fecha_hora_fin.errors %}
                                     <div class="text-danger small mt-1 fw-bold">{{ form.fecha_hora_fin.errors|striptags }}</div>
@@ -124,13 +124,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase text-muted">PIN de Confirmación</label>
+                            <label class="form-label small fw-bold text-muted">PIN de Confirmación</label>
                             {{ form.pin_confirmacion }}
                         </div>
                         
                         {% if cargue_masivo %}
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-uppercase">Cargue Masivo</label>
+                                <label class="form-label small fw-bold">Cargue Masivo</label>
                                 <a href="{% url 'Eventos:importar_asistentes_csv' actividad_id=evento.id %}" class="btn btn-light border text-secondary">Cargar Archivo</a>
                             </div>
                         {% endif %}

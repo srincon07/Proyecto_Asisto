@@ -1054,7 +1054,8 @@ def importar_asistentes_csv(request, actividad_id):
 @login_required
 @es_miembro_grupo('Administrador')
 def api_indicadores(request):
-    data = obtener_datos_dashboard()
+    actividad_id = request.GET.get('evento_id')
+    data = obtener_datos_dashboard(actividad_id)
     return JsonResponse(data, safe=False)
 
 # Eventos/views.py
@@ -1062,5 +1063,5 @@ def api_indicadores(request):
 @login_required
 @es_miembro_grupo('Administrador')
 def dashboard_view(request):
-    """Esta vista simplemente carga el archivo HTML del dashboard."""
-    return render(request, 'Eventos/dashboard.html')
+    eventos = ActividadProgramada.objects.all().order_by('-fecha_hora_inicio')
+    return render(request, 'Eventos/dashboard.html', {'eventos': eventos})
