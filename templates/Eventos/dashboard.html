@@ -26,7 +26,7 @@
         <select id="filtroEvento" class="form-select shadow-sm" onchange="cargarDatos(this.value)">
             <option value="">Todos los eventos (Global)</option>
             {% for e in eventos %}
-                <option value="{{ e.id }}">{{ e.nombre_evento }}</option>
+                <option value="{{ e.id }}">{{ e }}</option>
             {% endfor %}
         </select>
     </div>
@@ -101,7 +101,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3">
@@ -112,6 +112,25 @@
                         <canvas id="chartTendencia"></canvas>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-gender-ambiguous me-2"></i>Asistencia por Género</h5>
+                </div>
+                <div class="card-body"><div style="height: 250px;"><canvas id="chartGenero"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-person-wheelchair me-2"></i>Asistencia por Discapacidad</h5>
+                </div>
+                <div class="card-body"><div style="height: 250px;"><canvas id="chartDiscapacidad"></canvas></div></div>
             </div>
         </div>
     </div>
@@ -226,6 +245,26 @@
                             x: { grid: { display: false } }
                         }
                     }
+                });
+
+                // Gráfica de Género
+                charts['chartGenero'] = new Chart(document.getElementById('chartGenero').getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: data.genero.map(g => g.asistente__genero || 'No especificado'),
+                        datasets: [{ data: data.genero.map(g => g.cantidad), backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Gráfica de Discapacidad
+                charts['chartDiscapacidad'] = new Chart(document.getElementById('chartDiscapacidad').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.discapacidad.map(d => d.asistente__tiene_discapacidad ? 'Con Discapacidad' : 'Sin Discapacidad'),
+                        datasets: [{ data: data.discapacidad.map(d => d.cantidad), backgroundColor: ['#58bac5', '#e9ecef'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
                 });
             });
     }

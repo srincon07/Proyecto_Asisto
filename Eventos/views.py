@@ -46,11 +46,13 @@ def programar_actividad(request, pk=None):
     if request.method == "POST":
         form = ActividadProgramadaForm(request.POST, instance=instancia)
         if form.is_valid():
+            # Validar que si el evento ya tenía asistencias, no intenten cambiar Preregistro
+            if instancia and instancia.asistencias.exists():
+                form.instance.requiere_preregistro = instancia.requiere_preregistro
+            
             form.save()
-            messages.success(
-                request, "La actividad se ha registrado correctamente en la agenda."
-            )
-            return redirect("Eventos:lista_eventos")
+            messages.success(request, "Actividad programada correctamente.")
+            return redirect('Eventos:lista_eventos')
     else:
         form = ActividadProgramadaForm(instance=instancia)
 
@@ -129,6 +131,13 @@ def eliminar_actividad(request, pk):
             request, "No se puede eliminar una actividad que ya inició o finalizó."
         )
         return redirect("Eventos:lista_eventos")
+    
+    if actividad.asistencias:
+        messages.error(
+            request, "No se puede eliminar una actividad que ya cuenta con asistentes registrados."
+        )
+        return redirect("Eventos:lista_eventos")
+        
 
     if request.method == "POST":  # Por seguridad, las eliminaciones deben ser por POST
         actividad.delete()
@@ -552,9 +561,7 @@ def procesar_asistencia_ajax(request, actividad_id):
                     )
 
                 # Generación del código condicional según la regla 1.a
-                token_pase = None
-                if actividad.permite_qr_invertido:
-                    token_pase = f"PASE-{uuid.uuid4().hex[:8].upper()}"
+                token_pase = f"PASE-{uuid.uuid4().hex[:8].upper()}"
 
                 # Almacenamos la inscripción
                 registro = RegistroAsistencia.objects.create(
@@ -568,7 +575,7 @@ def procesar_asistencia_ajax(request, actividad_id):
                 # === ENVIAR CORREO ELECTRÓNICO (AGREGAR AQUÍ) ===
                 # Validamos que la persona tenga un correo registrado
                 if persona.email:
-                    if token_pase:
+                    if actividad.permite_qr_invertido:
                         try:
                             qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
                             qr.add_data(registro.codigo_pase_unico)
@@ -632,7 +639,7 @@ def procesar_asistencia_ajax(request, actividad_id):
                 msg_inscripcion = (
                     "Su participación ha sido registrada."
                 )
-                if token_pase:
+                if actividad.permite_qr_invertido:
                     msg_inscripcion = f"Su participación ha sido registrada. Su pase digital {token_pase} ha sido enviado a su correo."
 
                 return JsonResponse({"status": "success", "message": msg_inscripcion})
@@ -713,7 +720,6 @@ def procesar_asistencia_ajax(request, actividad_id):
                         persona.discapacidad = None
                     persona.save()
 
-            # if creada:
             if cargo_seleccionado_id:
                 try:
                     cargo_obj = Cargo.objects.get(id=cargo_seleccionado_id)

@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow border-0 mx-auto" style="max-width: 600px;">
+        <div class="card-header custom-header text-white py-3">
+            <h5 class="m-0">Opciones para: "{{ pregunta.texto }}"</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Valor (Numérico)</th>
+                            <th>Etiqueta (Texto)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <p class="text-muted small"><em>
+                            * Sugerencia: Define etiquetas claras como "Muy insatisfecho" o "Muy satisfecho" para mejorar la calidad de tus datos.
+                        </em></p>
+                        {% for form in formset %}
+                            {{ form.id }}
+                            <tr>
+                                <td><input type="number" name="{{ form.valor.html_name }}" class="form-control" value="{{ form.valor.value|default:'' }}"></td>
+                                <td><input type="text" name="{{ form.label.html_name }}" class="form-control" value="{{ form.label.value|default:'' }}"></td>
+                                <td>{% if form.can_delete %}{{ form.DELETE }}{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary w-100">Guardar Opciones</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

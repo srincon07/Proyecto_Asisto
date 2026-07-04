@@ -47,9 +47,11 @@ class ActividadProgramada(models.Model):
         blank=True,
         help_text="Minutos que durará activo el QR desde el inicio del evento",
     )
+    aplicar_evaluacion = models.BooleanField(default=False)
+    
 
     def __str__(self):
-        return f"{self.nombre_evento} - {self.fecha_hora_inicio.strftime('%Y-%m-%d')}"
+        return f"{self.nombre_evento} - {self.fecha_hora_inicio.strftime('%Y-%m-%d %H:%M')}"
 
 
 class RegistroAsistencia(models.Model):
@@ -75,7 +77,7 @@ class RegistroAsistencia(models.Model):
     codigo_pase_unico = models.CharField(
         max_length=50, unique=True, null=True, blank=True
     )
-    observaciones = models.TextField(blank=True, null=True)
+    evaluacion_completada = models.BooleanField(default=False)
 
     class Meta:
         # Evita duplicar al mismo asistente en la misma actividad

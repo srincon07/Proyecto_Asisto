@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Invitación a Evaluación</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333333; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 680px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 10px; }
+    .header { text-align: center; padding-bottom: 16px; border-bottom: 1px solid #dddddd; }
+    .header h1 { margin: 0; font-size: 24px; color: #0d6efd; } /* Azul Bootstrap */
+    .content { padding-top: 18px; line-height: 1.6; }
+    .btn-evaluar { display: block; width: 200px; margin: 25px auto; padding: 12px; background: #1e2b58; color: #ffffff; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .footer { font-size: 13px; color: #6b7280; padding-top: 18px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Tu opinión nos importa</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{ registro.asistente.nombres }}</strong>,</p>
+      <p>Muchas gracias por participar en la actividad <strong>{{ actividad.nombre_evento }}</strong>.</p>
+      <p>Para nosotros es fundamental conocer tu experiencia y sugerencias para seguir mejorando nuestras actividades institucionales. Te invitamos a completar esta breve evaluación:</p>
+      
+      <a href="{{ url_evaluacion }}" class="btn-evaluar" style="color: #ffffff !important; text-decoration: none;">Completar Evaluación</a>
+      
+      <p><em>Nota: Este enlace es personal y seguro. Solo te tomará unos pocos minutos.</em></p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+    </div>
+  </div>
+</body>
+</html>

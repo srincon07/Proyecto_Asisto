@@ -94,6 +94,8 @@ class PersonaForm(forms.ModelForm):
             for p_cargo in cargos_asignados:
                 self.initial[f"cargo_{p_cargo.cargo.id}"] = True
                 self.initial[f"estado_{p_cargo.cargo.id}"] = p_cargo.estado
+                
+        self.fields["discapacidad"].empty_label = "Seleccione..."
 
     def save(self, commit=True):
         persona = super().save(commit=commit)

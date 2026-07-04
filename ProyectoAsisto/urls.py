@@ -35,6 +35,7 @@ urlpatterns = [
     path("personas/", include("PersonasApp.urls")),
     path("", include("EstructuraApp.urls")),
     path("eventos/", include("Eventos.urls")),
+    path("Evaluacion/", include("EvaluacionesApp.urls")),
 ]
 
 if settings.DEBUG:

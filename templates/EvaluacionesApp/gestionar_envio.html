@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container py-5">
+    
+    <div class="custom-header">
+        <h3>Gestionar Envío: {{ actividad.nombre_evento }}</h3>
+    </div>
+    <p>Se enviarán invitaciones a <strong>{{ asistentes.count }}</strong> asistentes confirmados.</p>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <ul class="list-group list-group-flush mb-4">
+                {% for reg in asistentes %}
+                <li class="list-group-item">{{ reg.asistente.nombres }} {{ reg.asistente.apellidos }} - {{ reg.asistente.email }}</li>
+                {% endfor %}
+            </ul>
+            
+            <form method="POST" id="formEnviarEvaluacion">
+                {% csrf_token %}
+                <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Confirmar y Enviar Correos</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// --- INTERCEPCIÓN Y LOADING PARA FORMULARIOS ---
+document.addEventListener('DOMContentLoaded', function() {
+    const formEnviarEvaluacion = document.getElementById('formEnviarEvaluacion');
+
+    if (formEnviarEvaluacion) {
+        formEnviarEvaluacion.addEventListener('submit', function(e) {
+            // Validamos que el formulario HTML5 nativo sea válido antes de disparar el alert
+            if (formEnviarEvaluacion.checkValidity()) {
+                Swal.fire({
+                    title: 'Enviando correos...',
+                    html: 'Por favor, espera unos segundos mientras la magia ocurre.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -169,13 +169,28 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4 border-top pt-3">
-                    <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-light border"><i class="bi bi-x-circle"></i> Cancelar</a>
-                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
-                        <i class="bi bi-check-circle-fill me-2"></i> {% if id_persona > 0 %}Actualizar Cambios{% else %}Guardar Registro{% endif %}
-                    </button>
+                <div class="d-flex gap-2 justify-content-end border-top pt-4 mt-3">
+                    {% if id_persona %}
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="confirmarEliminacionPersona('{{ id_persona }}', '{{ persona|escapejs }}')">
+                            <i class="bi bi-trash3-fill"></i> Eliminar Persona
+                        </button>
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'PersonasApp:lista_personas' %}" class="btn btn-light border"><i class="bi bi-x-circle"></i> Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> {% if id_persona > 0 %}Actualizar Cambios{% else %}Guardar Registro{% endif %}
+                        </button>
+                    </div>
                 </div>
             </form>
+            
+            <!-- Formulario oculto por cada fila para procesar el borrado seguro via POST -->
+            {% if id_persona %}
+                <form id="form-eliminar-{{ id_persona }}" action="{% url 'PersonasApp:eliminar_persona' id_persona %}" method="POST" style="display: none;">
+                    {% csrf_token %}
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -317,6 +332,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     {% endif %}
 });
+
+// =================================================================
+// NUEVA FUNCIONALIDAD: CONFIRMACIÓN DE ELIMINACIÓN DE PERSONA
+// =================================================================
+function confirmarEliminacionPersona(id, nombreCompleto) {
+    Swal.fire({
+        title: '¿Eliminar persona?',
+        html: `Estás a punto de eliminar permanentemente a <strong>${nombreCompleto}</strong> de la plataforma.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(`form-eliminar-${id}`).submit();
+            // Loader para evitar múltiples clicks mientras procesa el redireccionamiento
+            Swal.fire({
+                title: 'Verificando y eliminando...',
+                allowOutsideClick: false,
+                didOpen: () => { 
+                    Swal.showLoading(); 
+                }
+            });
+        }
+    });
+}
 
 </script>
 {% endblock %}

@@ -36,6 +36,14 @@ def obtener_datos_dashboard(actividad_id=None):
          .annotate(total=Count('id'))
          .order_by('fecha'))
         
+        # 4. Asistencia por Género (Accediendo a través de la relación)
+        stats_genero = list(qs_asistencia.values('asistente__genero')
+                            .annotate(cantidad=Count('id')))
+
+        # 5. Asistencia por Discapacidad (Accediendo a través de la relación)
+        stats_discapacidad = list(qs_asistencia.values('asistente__discapacidad')
+                                  .annotate(cantidad=Count('id')))
+        
         local_tz = ZoneInfo("America/Bogota") # O tu zona horaria correspondiente
         time_now = timezone.now().astimezone(local_tz)
 
@@ -43,6 +51,8 @@ def obtener_datos_dashboard(actividad_id=None):
             "estado": stats_estado,
             "tipo": stats_tipo,
             "tendencia": stats_tendencia,
+            "genero": stats_genero,
+            "discapacidad": stats_discapacidad,
             "updated_at": time_now.strftime("%H:%M:%S")
         }
         

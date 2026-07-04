@@ -128,6 +128,23 @@
                             {{ form.pin_confirmacion }}
                         </div>
                         
+                        <!-- Switch de Evaluacion nativo de Django -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {% if evento and evento.evaluacion %}
+                                    {{ form.aplicar_evaluacion }}
+                                    <label class="form-check-label fw-bold text-muted" for="id_aplicar_evaluacion">¿Aplicar Evaluación?</label>
+                                    <div class="form-text text-warning small">
+                                        <i class="bi bi-exclador-triangle-fill me-1"></i> No se puede modificar: Este evento ya cuenta con evaluación asignada.
+                                    </div>
+                                    <input type="hidden" name="aplicar_evaluacion" value="{% if evento.aplicar_evaluacion %}on{% else %}off{% endif %}">
+                                {% else %}
+                                    {{ form.aplicar_evaluacion }}
+                                    <label class="form-check-label fw-bold" for="id_aplicar_evaluacion">¿Aplicar Evaluación?</label>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         {% if cargue_masivo %}
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Cargue Masivo</label>
@@ -138,148 +155,161 @@
                 </div>
 
                 <div class="d-flex gap-2 justify-content-end border-top pt-4 mt-3">
-                    <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-light border text-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
-                        <i class="bi bi-save me-2"></i> {% if evento %}Actualizar Actividad{% else %}Guardar Actividad{% endif %}
-                    </button>
+                    {% if evento %}
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="confirmarEliminacion('{{ evento.id }}', '{{ evento.nombre_evento|escapejs }}', '{{ evento.estado_txt }}')">
+                            <i class="bi bi-trash3-fill"></i> Eliminar Actividad
+                        </button>
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-light border text-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                            <i class="bi bi-save me-2"></i> {% if evento %}Actualizar Actividad{% else %}Guardar Actividad{% endif %}
+                        </button>
+                    </div>
                 </div>
             </form>
+
+            <!-- Formulario oculto por cada fila para procesar el borrado seguro via POST -->
+            {% if evento %}
+                <form id="form-eliminar-{{ evento.id }}" action="{% url 'Eventos:eliminar_actividad' evento.id %}" method="POST" style="display: none;">
+                    {% csrf_token %}
+                </form>
+            {% endif %}
         </div>
     </div>
     </div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
 
-    <script>
-    $(document).ready(function() {
-        // Inicializar buscador Select2 nativo de Django
-        $('#select-responsable').select2({
-            placeholder: "Escriba para buscar...",
-            allowClear: true,
-            width: '100%'
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Inicialización de Select2
+    $('#select-responsable').select2({ placeholder: "Escriba para buscar...", allowClear: true, width: '100%' });
 
-        // Lógica de edición: disparar cascada inicial si existe una instancia previa
-        {% if evento %}
-            const pre_linea = "{{ evento.id_tipo_actividad.id_linea_id }}";
-            const pre_tipo = "{{ evento.id_tipo_actividad_id }}";
-            const objVal = $('#obj').val();
-            if(objVal) cargarLineas(objVal, pre_linea, pre_tipo);
-        {% endif %}
+    {% if evento %}
+        const pre_linea = "{{ evento.id_tipo_actividad.id_linea_id }}";
+        const pre_tipo = "{{ evento.id_tipo_actividad_id }}";
+        const objVal = $('#obj').val();
+        
+        if(objVal) {
+            // Llamamos a la función de carga pasando los IDs guardados
+            cargarLineas(objVal, pre_linea, pre_tipo);
+        }
+    {% endif %}
+
+    // 2. Definición única de variables
+    const chkPreregistro = document.getElementById('id_requiere_preregistro');
+    const chkAplicarEvaluacion = document.getElementById('id_aplicar_evaluacion');
+    const chkQRInvertido = document.getElementById('id_permite_qr_invertido');
+    const chkTemporal = document.getElementById('id_asistencia_temporal');
+    const divPreregistro = document.getElementById('contenedor-preregistro');
+    const divSinPreregistro = document.getElementById('contenedor-sin-preregistro');
+    const divTiempoTemporal = document.getElementById('contenedor-tiempo-temporal');
+    const divMinutos = document.getElementById('div-minutos-cierre');
+    const inputMinutos = document.querySelector('[name="minutos_anticipacion_cierre"]');
+
+    {% if evento and evento.asistencias.exists %}
+        if (chkPreregistro) {
+            chkPreregistro.disabled = true;
+        }
+    {% endif %}
+
+    {% if evento and evento.evaluacion %}
+        if (chkAplicarEvaluacion) {
+            chkAplicarEvaluacion.disabled = true;
+        }
+    {% endif %}
+
+    // 3. Lógica de UI consolidada
+    function toggleFormulario() {
+        if (chkPreregistro && chkPreregistro.checked) {
+            divPreregistro.style.display = 'block';
+            divSinPreregistro.style.display = 'none';
+            if(divMinutos) divMinutos.style.display = 'block';
+        } else if (chkPreregistro) {
+            divPreregistro.style.display = 'none';
+            divSinPreregistro.style.display = 'block';
+            if(divMinutos) divMinutos.style.display = 'none';
+            if(inputMinutos) inputMinutos.value = 0;
+            if(chkQRInvertido) chkQRInvertido.checked = false;
+            if(chkTemporal) chkTemporal.checked = false;
+            if(divTiempoTemporal) divTiempoTemporal.style.display = 'none';
+        }
+    }
+
+    if (chkPreregistro) chkPreregistro.addEventListener('change', toggleFormulario);
+    if (chkTemporal) chkTemporal.addEventListener('change', () => {
+        divTiempoTemporal.style.display = chkTemporal.checked ? 'block' : 'none';
     });
 
-    async function cargarLineas(id, selectDefault = "", tipoDefault = "") {
-        if(!id) return;
-        const lin = document.getElementById('lin');
-        lin.disabled = false;
-        lin.innerHTML = '<option>Cargando...</option>';
-        
-        // Apuntamos al endpoint estructurado en Django
+    toggleFormulario(); // Ejecución inicial
+});
+
+async function cargarLineas(id, selectDefault = "", tipoDefault = "") {
+    if (!id) return;
+    const lin = document.getElementById('lin');
+    lin.disabled = false;
+    lin.innerHTML = '<option>Cargando...</option>';
+    
+    try {
+        // Asegúrate de que el URL sea correcto
         const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?objetivo_id=${id}`);
-        const data = await resp.json();
         
+        // --- AQUÍ ESTABA PROBABLEMENTE EL ERROR ---
+        // Debes esperar a convertir la respuesta a JSON antes de usar 'data'
+        const data = await resp.json(); 
+        
+        // Ahora 'data' está definida correctamente dentro de este ámbito
         lin.innerHTML = '<option value="">Seleccione Línea...</option>';
+        
         data.forEach(l => {
             const sel = (l.id == selectDefault) ? 'selected' : '';
             lin.innerHTML += `<option value="${l.id}" ${sel}>${l.nombre_linea}</option>`;
         });
         
-        if(selectDefault) cargarTipos(selectDefault, tipoDefault);
-    }
-
-    async function cargarTipos(id, selectDefault = "") {
-        if(!id) return;
-        const tip = document.getElementById('tip');
-        tip.disabled = false;
-        tip.innerHTML = '<option>Cargando...</option>';
-        
-        // Apuntamos al endpoint estructurado en Django
-        const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?linea_id=${id}`);
-        const data = await resp.json();
-        
-        tip.innerHTML = '<option value="">Seleccione Tipo...</option>';
-        data.forEach(t => {
-            const sel = (t.id == selectDefault) ? 'selected' : '';
-            tip.innerHTML += `<option value="${t.id}" ${sel}>${t.nombre} (${t.modalidad})</option>`;
-        });
-    }
-
-    // Captura de mensajes flash de Django a través de SweetAlert2
-    {% if messages %}
-        {% for message in messages %}
-            Swal.fire({
-                icon: "{{ message.tags }}", // 'success', 'error', etc.
-                title: '¡Operación Exitosa!',
-                text: "{{ message }}",
-                timer: 2500,
-                showConfirmButton: false
-            });
-        {% endfor %}
-    {% endif %}
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const chkPreregistro = document.querySelector('[name="requiere_preregistro"]');
-        const divMinutos = document.getElementById('div-minutos-cierre');
-        const inputMinutos = document.querySelector('[name="minutos_anticipacion_cierre"]');
-
-        function evaluarVisibilidad() {
-            if (chkPreregistro.checked) {
-                divMinutos.style.display = 'block';
-                if(inputMinutos.value === "") inputMinutos.value = 0; // Valor por defecto amigable
-            } else {
-                divMinutos.style.display = 'none';
-                inputMinutos.value = 0; // Si se desmarca, se limpia a 0
-            }
+        if (selectDefault) {
+            cargarTipos(selectDefault, tipoDefault);
         }
+    } catch (error) {
+        console.error("Error al cargar líneas:", error);
+        lin.innerHTML = '<option value="">Error al cargar</option>';
+    }
+}
 
-        // Escuchar los cambios del checkbox
-        chkPreregistro.addEventListener('change', evaluarVisibilidad);
-        
-        // Ejecutar al cargar la página (por si es una edición y ya estaba marcado)
-        evaluarVisibilidad();
+async function cargarTipos(id, selectDefault = "") {
+    if(!id) return;
+    const tip = document.getElementById('tip');
+    tip.disabled = false;
+    tip.innerHTML = '<option>Cargando...</option>';
+    
+    // Apuntamos al endpoint estructurado en Django
+    const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?linea_id=${id}`);
+    const data = await resp.json();
+    
+    tip.innerHTML = '<option value="">Seleccione Tipo...</option>';
+    data.forEach(t => {
+        const sel = (t.id == selectDefault) ? 'selected' : '';
+        tip.innerHTML += `<option value="${t.id}" ${sel}>${t.nombre} (${t.modalidad})</option>`;
     });
+}
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const chkPreregistro = document.getElementById('id_requiere_preregistro');
-        const chkQRInvertido = document.getElementById('id_permite_qr_invertido'); // <- Capturamos el switch de QR Invertido
-        
-        const divPreregistro = document.getElementById('contenedor-preregistro');
-        const divSinPreregistro = document.getElementById('contenedor-sin-preregistro');
-        
-        const chkTemporal = document.getElementById('id_asistencia_temporal');
-        const divTiempoTemporal = document.getElementById('contenedor-tiempo-temporal');
-
-        // Deshabilitar dinámicamente si el backend detectó asistencias previas
-        {% if evento and evento.asistencias.exists %}
-            chkPreregistro.disabled = true;
-        {% endif %}
-
-        function toggleFormulario() {
-            if (chkPreregistro.checked) {
-                divPreregistro.style.display = 'block';
-                divSinPreregistro.style.display = 'none'; 
-            } else {
-                divPreregistro.style.display = 'none';
-                divSinPreregistro.style.display = 'block';
-                
-                // REQUERIMIENTO 2: Si se desmarca Prerregistro, desactivamos QR invertido automáticamente
-                if (chkQRInvertido) {
-                    chkQRInvertido.checked = false;
-                }
-                
-                chkTemporal.checked = false;
-                divTiempoTemporal.style.display = 'none';
-            }
+// Función global fuera del evento (para ser accesible por el onclick)
+function confirmarEliminacion(id, nombre, estado) {
+    Swal.fire({
+        title: '¿Eliminar actividad?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(`form-eliminar-${id}`).submit();
         }
-
-        chkPreregistro.addEventListener('change', toggleFormulario);
-        chkTemporal.addEventListener('change', function() {
-            divTiempoTemporal.style.display = chkTemporal.checked ? 'block' : 'none';
-        });
-
-        // Ejecutar al cargar la página por si es una edición
-        toggleFormulario();
     });
-    </script>
+}
+</script>
 {% endblock %}

@@ -21,6 +21,7 @@ class ActividadProgramadaForm(forms.ModelForm):
             "fecha_hora_fin",
             "lugar_desarrollo",
             "pin_confirmacion",
+            "aplicar_evaluacion",
         ]
 
         widgets = {
@@ -68,12 +69,13 @@ class ActividadProgramadaForm(forms.ModelForm):
             "lugar_desarrollo": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Ej: Aula 101"}
             ),
+            "aplicar_evaluacion": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                    "id": "id_aplicar_evaluacion",
+                }
+            ),
         }
-
-    def __init__(self, *args, **kwargs):
-        # ... Mantén intacta tu lógica de inicialización y filtros AJAX actual ...
-        super().__init__(*args, **kwargs)
-        # (Tu código previo de responsables_filtrados y selected_tipo)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

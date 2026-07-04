@@ -45,13 +45,16 @@
                             <th>Roles</th>
                             <th>Cargos Asignados</th>
                             <th class="text-center">Género</th>
-                            <th class="text-center cell-acciones">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for persona in personas %}
                         <tr class="row-persona">
-                            <td class="ps-4 fw-semibold text-primary">{{ persona.identificacion }}</td>
+                            <td class="ps-4 fw-semibold text-primary">
+                                <a href="{% url 'PersonasApp:editar_persona' persona.id %}" class="text-decoration-none" title="Editar">
+                                    {{ persona.identificacion }}
+                                </a>
+                            </td>
                             <td class="fw-bold text-primary">{{ persona.nombres }} {{ persona.apellidos }}</td>
                             <td class="text-primary">
                                 <div class="d-flex flex-column">
@@ -98,16 +101,6 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-primary border" style="font-size: 0.75rem;">{{ persona.genero }}</span>
-                            </td>
-                            <td class="text-center cell-acciones">
-                                <div class="btn-group shadow-sm" role="group">
-                                    <a href="{% url 'PersonasApp:editar_persona' persona.id %}" class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <button type="button" onclick="confirmarEliminacionPersona({{ persona.id }}, '{{ persona.nombres|escapejs }} {{ persona.apellidos|escapejs }}')" class="btn btn-sm btn-danger shadow-sm" title="Eliminar">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </div>
                             </td>
                         </tr>
                         {% empty %}
@@ -215,38 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     {% endif %}
 });
-
-
-// =================================================================
-// NUEVA FUNCIONALIDAD: CONFIRMACIÓN DE ELIMINACIÓN DE PERSONA
-// =================================================================
-function confirmarEliminacionPersona(id, nombreCompleto) {
-    Swal.fire({
-        title: '¿Eliminar persona?',
-        html: `Estás a punto de eliminar permanentemente a <strong>${nombreCompleto}</strong> de la plataforma.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="bi bi-trash-fill me-2"></i>Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Loader para evitar múltiples clicks mientras procesa el redireccionamiento
-            Swal.fire({
-                title: 'Verificando y eliminando...',
-                allowOutsideClick: false,
-                didOpen: () => { 
-                    Swal.showLoading(); 
-                }
-            });
-            
-            // Construcción de la URL de borrado
-            let url = "{% url 'PersonasApp:eliminar_persona' 0 %}".replace('0', id);
-            window.location.href = url;
-        }
-    });
-}
 
 </script>
 {% endblock %}

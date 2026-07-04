@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow border-0 mx-auto" style="max-width: 800px;">
+        <div class="card-header custom-header text-white py-3">
+            <h4 class="m-0">Configurar Evaluación: {{ actividad.nombre_evento }}</h4>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" id="evaluacionForm">
+                {% csrf_token %}
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Datos de la Evaluación</h5>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Título:</label>
+                            {{ form.titulo }}
+                        </div>
+                        <div class="form-check">
+                            {{ form.activa }}
+                            <label>¿Habilitar evaluación?</label>
+                        </div>
+                    </div>
+                </div>
+                
+                {{ formset.management_form }}
+                
+                <div id="preguntas-container">
+                    {% for form in formset %}
+
+                        <div class="card mb-3 border-light shadow-sm">
+                            <div class="card-body">
+                                {{ form.id }}
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label class="form-label small fw-bold">Texto de la pregunta</label>
+                                        {{ form.texto }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Escala (Máx)</label>
+                                        {{ form.escala_maxima }}
+                                    </div>
+                                </div>
+
+                                {% if form.errors %}
+                                    <div class="text-danger small">{{ form.errors }}</div>
+                                {% endif %}
+
+                                {% if form.instance.pk %}
+                                    <div class="form-check mt-3">
+                                        {{ form.DELETE }}
+                                        <label class="form-check-label small" for="{{ form.DELETE.id_for_label }}">
+                                            Marcar para eliminar esta pregunta
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                            {% if form.instance.pk %}
+                                <a href="{% url 'EvaluacionesApp:configurar_opciones' form.instance.pk %}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-tags"></i> Opciones de Respuesta
+                                </a>
+                            {% else %}
+                                <span class="text-muted small"><em>Guarda los cambios primero para configurar etiquetas</em></span>
+                            {% endif %}
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+                </div>
+
+                <button type="button" id="add-pregunta" class="btn btn-outline-success btn-sm mb-3">
+                    <i class="bi bi-plus-circle"></i> Agregar Pregunta
+                </button>
+
+                <div id="empty-form" style="display:none;">
+                    <div class="card mb-3 border-light shadow-sm">
+                        <div class="card-body">
+                            <input type="hidden" name="preguntas-__prefix__-id" id="id_preguntas-__prefix__-id">
+                            <input type="hidden" name="preguntas-__prefix__-evaluacion" id="id_preguntas-__prefix__-evaluacion">
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">Texto de la pregunta</label>
+                                    <input type="text" name="preguntas-__prefix__-texto" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Escala (Máx)</label>
+                                    <input type="number" name="preguntas-__prefix__-escala_maxima" class="form-control" value="5">
+                                </div>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" name="preguntas-__prefix__-DELETE" id="id_preguntas-__prefix__-DELETE" class="form-check-input">
+                                <label class="form-check-label small">Marcar para eliminar esta pregunta</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'Eventos:lista_eventos' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('add-pregunta').addEventListener('click', function() {
+        const totalForms = document.getElementById('id_preguntas-TOTAL_FORMS');
+        const container = document.getElementById('preguntas-container');
+        const emptyFormTemplate = document.getElementById('empty-form').innerHTML;
+        
+        // El índice es el valor actual de TOTAL_FORMS
+        let index = parseInt(totalForms.value);
+        
+        // Reemplazamos __prefix__ por el índice real
+        const newFormHtml = emptyFormTemplate.replace(/__prefix__/g, index);
+        
+        // Insertamos
+        container.insertAdjacentHTML('beforeend', newFormHtml);
+        
+        const lastForm = container.lastElementChild;
+        lastForm.querySelector('input[name*="-texto"]').setAttribute('required', 'required');
+
+        // Incrementamos el contador para Django
+        totalForms.value = index + 1;
+    });
+</script>
+
+{% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let messagesText = "";
+            {% for message in messages %}
+                messagesText += "{{ message|escapejs }}\n";
+            {% endfor %}
+
+            Swal.fire({
+                icon: "{% if 'Error' in messages.0.tags or 'error' in messages.0.tags %}error{% else %}success{% endif %}",
+                title: "Notificación del Sistema",
+                text: messagesText,
+                confirmButtonColor: '#1e2b58',
+                confirmButtonText: 'Entendido'
+            });
+        });
+    </script>
+{% endif %}
+{% endblock %}

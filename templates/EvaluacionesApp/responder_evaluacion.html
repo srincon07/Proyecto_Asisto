@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-sm mx-auto" style="max-width: 600px;">
+        <div class="card-header custom-header text-white text-center">
+            <h3>{{ evaluacion.titulo }}</h3>
+            <p class="mb-0">{{ actividad.nombre_evento }}</p>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% url 'EvaluacionesApp:procesar_evaluacion' actividad.id token %}">
+                {% csrf_token %}
+                
+                {% for pregunta in evaluacion.preguntas.all %}
+                    <div class="mb-4">
+                        <label class="fw-bold d-block mb-2">{{ pregunta.texto }}</label>
+                        <div class="btn-group w-100" role="group">
+                            {% for opcion in pregunta.opciones.all %}
+                                <input type="radio" class="btn-check" name="pregunta_{{ pregunta.id }}" 
+                                       id="opt_{{ opcion.id }}" value="{{ opcion.valor }}" required>
+                                <label class="btn btn-outline-secondary" for="opt_{{ opcion.id }}">
+                                    {{ opcion.label }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="mb-4">
+                    <label class="fw-bold d-block mb-2">¿Tienes algún comentario adicional?</label>
+                    <textarea class="form-control" name="comentarios" rows="3" placeholder="Tu opinión es muy importante..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 mt-3">Enviar Evaluación</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

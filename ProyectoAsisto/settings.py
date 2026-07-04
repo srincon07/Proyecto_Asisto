@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "PersonasApp.apps.PersonasappConfig",
     "EstructuraApp.apps.EstructuraappConfig",
     "Eventos.apps.EventosConfig",
+    "EvaluacionesApp.apps.EvaluacionesappConfig",
 ]
 
 MIDDLEWARE = [

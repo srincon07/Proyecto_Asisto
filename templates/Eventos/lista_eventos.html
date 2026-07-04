@@ -108,23 +108,33 @@
                             <td class="text-center">
                                 {% if request.user.es_admin or request.user.es_organizador or request.user.is_superuser %}
                                 <div class="btn-group shadow-sm">
-                                    <a href="{% url 'Eventos:panel_asistentes_actividad' row.id %}" class="btn btn-sm btn-info text-white" title="Ver Asistentes">
+                                    <a href="{% url 'Eventos:panel_asistentes_actividad' row.id %}" class="btn btn-sm btn-outline-info text-primary" title="Ver Asistentes">
                                         <i class="bi bi-people-fill"></i>
                                     </a>
-                                    <a href="{% url 'Eventos:editar_actividad' row.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                    <a href="{% url 'Eventos:editar_actividad' row.id %}" class="btn btn-sm btn-outline-warning text-primary" title="Editar">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <button onclick="confirmarEliminacion('{{ row.id }}', '{{ row.nombre_evento|escapejs }}', '{{ row.estado_txt }}')" 
-                                            class="btn btn-sm btn-danger" title="Eliminar">
-                                        <i class="bi bi-trash3-fill"></i>
-                                    </button>
+                                    
+                                    {% if row.aplicar_evaluacion %}
+                                        <a href="{% url 'EvaluacionesApp:configurar_evaluacion' row.id %}" class="btn btn-sm btn-outline-primary text-primary" title="Configurar Evaluación">
+                                            <i class="bi bi-card-checklist"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    {% if row.evaluacion and row.evaluacion.activa %}
+                                        <a href="{% url 'EvaluacionesApp:gestionar_envio' row.id %}" 
+                                        class="btn btn-sm btn-outline-success text-primary" title="Gestionar Envío de Evaluación">
+                                            <i class="bi bi-envelope-at"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    <a href="{% url 'EvaluacionesApp:dashboard_evaluacion' row.id %}" 
+                                    class="btn btn-sm btn-outline-secondary text-primary" title="Dashboard">
+                                        <i class="bi bi-bar-chart"></i>
+                                    </a>
+
                                 </div>
                                 {% endif %}
-                                
-                                <!-- Formulario oculto por cada fila para procesar el borrado seguro via POST -->
-                                <form id="form-eliminar-{{ row.id }}" action="{% url 'Eventos:eliminar_actividad' row.id %}" method="POST" style="display: none;">
-                                    {% csrf_token %}
-                                </form>
                             </td>
 
                         </tr>
@@ -164,34 +174,6 @@ function verQR(evento, link) {
         `,
         confirmButtonColor: '#1e2b58',
         confirmButtonText: 'Cerrar'
-    });
-}
-
-function confirmarEliminacion(id, nombre, estado) {
-    if (estado !== 'PROGRAMADA') {
-        Swal.fire({
-            icon: 'error',
-            title: 'Acción denegada',
-            text: `No se puede eliminar la actividad "${nombre}" porque ya está ${estado.toLowerCase()}.`,
-            confirmButtonColor: '#3085d6'
-        });
-        return;
-    }
-
-    Swal.fire({
-        title: '¿Eliminar actividad?',
-        text: "Esta acción no se puede deshacer.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Ejecutamos el envío del formulario POST correspondiente
-            document.getElementById(`form-eliminar-${id}`).submit();
-        }
     });
 }
 
