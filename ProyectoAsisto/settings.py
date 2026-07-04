@@ -176,22 +176,3 @@ AUTH_USER_MODEL = "PersonasApp.Persona"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "EstructuraApp:landing"
 LOGOUT_REDIRECT_URL = "EstructuraApp:index"
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': env("LOGS_DIR"),
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
-}
