@@ -38,14 +38,15 @@ def configurar_evaluacion(request, actividad_id):
             for f in formset:
                 if not f.cleaned_data.get('DELETE', False): # Solo si no se está eliminando
                     pregunta = f.instance
-                    if pregunta.pk and 'escala_maxima' in f.changed_data:
-                        if pregunta.respuestas.exists():
-                            messages.error(request, f"No puedes cambiar la escala de '{pregunta.texto}' porque ya tiene respuestas.")
-                            return redirect('EvaluacionesApp:configurar_evaluacion', actividad_id=actividad_id)
+                    if pregunta.pk:
+                        if 'escala_maxima' in f.changed_data:
+                            if pregunta.respuestas.exists():
+                                messages.error(request, f"No puedes cambiar la escala de '{pregunta.texto}' porque ya tiene respuestas.")
+                                return redirect('EvaluacionesApp:configurar_evaluacion', actividad_id=actividad_id)
                         
-                    if not pregunta.opciones.exists():
-                        messages.error(request, f"La pregunta '{pregunta.texto}' no tiene opciones de respuesta confirmadas. Por favor, configura las opciones antes de guardar.")
-                        return redirect('EvaluacionesApp:configurar_evaluacion', actividad_id=actividad_id)
+                        if not pregunta.opciones.exists():
+                            messages.error(request, f"La pregunta '{pregunta.texto}' no tiene opciones de respuesta confirmadas. Por favor, configura las opciones antes de guardar.")
+                            return redirect('EvaluacionesApp:configurar_evaluacion', actividad_id=actividad_id)
             
             formset.save()
             messages.success(request, "Evaluación actualizada exitosamente.")
