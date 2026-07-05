@@ -10,7 +10,6 @@ class ActividadProgramada(models.Model):
     id_tipo_actividad = models.ForeignKey(
         TipoActividad,
         on_delete=models.PROTECT,
-        default=1,
         related_name="actividades_programadas",
         verbose_name="Tipo de Actividad",
     )
@@ -18,7 +17,6 @@ class ActividadProgramada(models.Model):
     id_responsable = models.ForeignKey(
         Persona,
         on_delete=models.PROTECT,
-        default=1,
         related_name="actividades_responsable",
         verbose_name="Responsable",
     )
@@ -63,10 +61,10 @@ class RegistroAsistencia(models.Model):
     ]
 
     actividad = models.ForeignKey(
-        ActividadProgramada, on_delete=models.CASCADE, default=1, related_name="asistencias"
+        ActividadProgramada, on_delete=models.CASCADE, related_name="asistencias"
     )
     asistente = models.ForeignKey(
-        Persona, on_delete=models.CASCADE, default=1, related_name="historial_actividades"
+        Persona, on_delete=models.CASCADE, related_name="historial_actividades"
     )
     fecha_registro = models.DateTimeField(auto_now_add=True)
     fecha_confirmacion = models.DateTimeField(
