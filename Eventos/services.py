@@ -41,7 +41,7 @@ def obtener_datos_dashboard(actividad_id=None):
                             .annotate(cantidad=Count('id')))
 
         # 5. Asistencia por Discapacidad (Accediendo a través de la relación)
-        stats_discapacidad = list(qs_asistencia.values('asistente__discapacidad')
+        stats_discapacidad = list(qs_asistencia.values('asistente__discapacidad__nombre_discapacidad')
                                   .annotate(cantidad=Count('id')))
         
         local_tz = ZoneInfo("America/Bogota") # O tu zona horaria correspondiente

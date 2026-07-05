@@ -1064,8 +1064,6 @@ def api_indicadores(request):
     data = obtener_datos_dashboard(actividad_id)
     return JsonResponse(data, safe=False)
 
-# Eventos/views.py
-
 @login_required
 @es_miembro_grupo('Administrador')
 def dashboard_view(request):

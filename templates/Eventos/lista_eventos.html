@@ -126,12 +126,12 @@
                                         class="btn btn-sm btn-outline-success text-primary" title="Gestionar Envío de Evaluación">
                                             <i class="bi bi-envelope-at"></i>
                                         </a>
+                                        
+                                        <a href="{% url 'EvaluacionesApp:dashboard_evaluacion' row.id %}" 
+                                        class="btn btn-sm btn-outline-secondary text-primary" title="Dashboard">
+                                            <i class="bi bi-bar-chart"></i>
+                                        </a>
                                     {% endif %}
-
-                                    <a href="{% url 'EvaluacionesApp:dashboard_evaluacion' row.id %}" 
-                                    class="btn btn-sm btn-outline-secondary text-primary" title="Dashboard">
-                                        <i class="bi bi-bar-chart"></i>
-                                    </a>
 
                                 </div>
                                 {% endif %}

@@ -39,7 +39,7 @@
                         <i class="bi bi-people-fill h3 m-0"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Total Registrados</h6>
+                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Total registrados</h6>
                         <h3 class="m-0 fw-bold text-primary" id="kpiTotal">0</h3>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                         <i class="bi bi-check-circle-fill h3 m-0"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Presencia Confirmada</h6>
+                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Presencia confirmada</h6>
                         <h3 class="m-0 fw-bold text-primary" id="kpiConfirmados">0</h3>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                         <i class="bi bi-graph-up-arrow h3 m-0"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Tasa de Asistencia</h6>
+                        <h6 class="text-muted mb-1 text-uppercase small fw-bold">Tasa de asistencia</h6>
                         <h3 class="m-0 fw-bold text-primary" id="kpiTasa">0%</h3>
                     </div>
                 </div>
@@ -77,7 +77,7 @@
         <div class="col-md-5">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-pie-chart-fill me-2" style="color: #1e2b58;"></i>Estado de Participación</h5>
+                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-pie-chart-fill me-2" style="color: #1e2b58;"></i>Estado de participación</h5>
                 </div>
                 <div class="card-body">
                     <div style="height: 320px; position: relative;">
@@ -90,7 +90,7 @@
         <div class="col-md-7">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-bar-chart-fill me-2" style="color: #1e2b58;"></i>Asistencia por Tipo de Evento</h5>
+                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-bar-chart-fill me-2" style="color: #1e2b58;"></i>Asistencia según tipo de evento</h5>
                 </div>
                 <div class="card-body">
                     <div style="height: 320px; position: relative;">
@@ -105,7 +105,7 @@
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-activity me-2" style="color: #1e2b58;"></i>Tendencia de Confirmaciones (Últimos 30 días)</h5>
+                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-activity me-2" style="color: #1e2b58;"></i>Tendencia de confirmaciones (últimos 30 días)</h5>
                 </div>
                 <div class="card-body">
                     <div style="height: 350px; position: relative;">
@@ -120,7 +120,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-gender-ambiguous me-2"></i>Asistencia por Género</h5>
+                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-gender-ambiguous me-2"></i>Asistencia según género</h5>
                 </div>
                 <div class="card-body"><div style="height: 250px;"><canvas id="chartGenero"></canvas></div></div>
             </div>
@@ -128,7 +128,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-person-wheelchair me-2"></i>Asistencia por Discapacidad</h5>
+                    <h5 class="card-title m-0 fw-bold"><i class="bi bi-person-wheelchair me-2"></i>Asistencia según tipo de discapacidad</h5>
                 </div>
                 <div class="card-body"><div style="height: 250px;"><canvas id="chartDiscapacidad"></canvas></div></div>
             </div>
@@ -170,6 +170,12 @@
                 
                 // Calculamos tasa
                 const tasa = total > 0 ? Math.round((confirmados / total) * 100) : 0;
+
+                const categorias = data.discapacidad;
+                const colores = categorias.map((_, index) => {
+                    // Genera un color HSL dinámico que cambia el tono (hue)
+                    return `hsl(${(index * 360) / categorias.length}, 70%, 60%)`;
+                });
 
                 // Actualizamos el DOM
                 document.getElementById('kpiTotal').innerText = total;
@@ -261,8 +267,12 @@
                 charts['chartDiscapacidad'] = new Chart(document.getElementById('chartDiscapacidad').getContext('2d'), {
                     type: 'doughnut',
                     data: {
-                        labels: data.discapacidad.map(d => d.asistente__tiene_discapacidad ? 'Con Discapacidad' : 'Sin Discapacidad'),
-                        datasets: [{ data: data.discapacidad.map(d => d.cantidad), backgroundColor: ['#58bac5', '#e9ecef'] }]
+                        // Accedemos al nuevo campo que definimos en el values() del service
+                        labels: data.discapacidad.map(d => d.asistente__discapacidad__nombre_discapacidad || 'Sin Discapacidad'),
+                        datasets: [{ 
+                            data: data.discapacidad.map(d => d.cantidad), 
+                            backgroundColor: colores
+                        }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
