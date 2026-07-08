@@ -38,7 +38,7 @@ class RespuestaAnonima(models.Model):
         verbose_name_plural = "Respuestas Anónimas"
 
     def __str__(self):
-        return f"Respuesta a Pregunta ID {self.pregunta.id} - Valor: {self.valor}"
+        return f"Respuesta a Pregunta ID {self.pregunta.id} - Valor: {self.opcion}"
     
     
 class ComentarioAnonimo(models.Model):

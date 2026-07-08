@@ -1,6 +1,7 @@
 # Eventos/services.py
 from zoneinfo import ZoneInfo
 from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.core.cache import cache
 from .models import RegistroAsistencia, ActividadProgramada
 from django.utils import timezone
@@ -26,15 +27,19 @@ def obtener_datos_dashboard(actividad_id=None):
         stats_tipo = list(qs_actividad.values('id_tipo_actividad__nombre')
                           .annotate(total_asistentes=Count('asistencias')))
 
-        # 3. Tendencia (Últimos 30 días)
+        # 3. Tendencia (Últimos 30 días)        
         treinta_dias_atras = timezone.now() - timezone.timedelta(days=30)
-        stats_tendencia = list(qs_asistencia.filter(
-            estado='CONFIRMADO', 
-            fecha_confirmacion__gte=treinta_dias_atras
-        ).extra({'fecha': "date(fecha_confirmacion)"})
-         .values('fecha')
-         .annotate(total=Count('id'))
-         .order_by('fecha'))
+
+        stats_tendencia = list(
+            qs_asistencia.filter(
+                estado='CONFIRMADO', 
+                fecha_confirmacion__gte=treinta_dias_atras
+            )
+            .annotate(fecha=TruncDate('fecha_confirmacion')) # Transforma a fecha usando la TZ local
+            .values('fecha')
+            .annotate(total=Count('id'))
+            .order_by('fecha')
+        )
         
         # 4. Asistencia por Género (Accediendo a través de la relación)
         stats_genero = list(qs_asistencia.values('asistente__genero')

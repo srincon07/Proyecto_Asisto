@@ -1036,3 +1036,170 @@ h4 {
         margin-bottom: 1.5cm;
     }
 }
+
+/* ========== COMPONENTE: EVALUACIONES Y ENCUESTAS ========== */
+
+/* Tarjetas de preguntas individuales */
+.pregunta-card {
+    border: none !important;
+    border-radius: var(--border-radius-lg) !important;
+    box-shadow: var(--shadow-sm) !important;
+    background-color: var(--white);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.pregunta-card:hover {
+    box-shadow: var(--shadow-md) !important;
+}
+
+/* Etiquetas personalizadas de Radio botones para simular inputs táctiles modernos */
+.custom-radio-label {
+    border: 2px solid var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+    background-color: var(--white) !important;
+    border-radius: var(--border-radius-md) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 1rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+/* Estado Hover: Se ilumina sutilmente usando tu color base */
+.custom-radio-label:hover {
+    border-color: var(--color-primary) !important;
+    background-color: #f4f6fa !important;
+    color: var(--color-primary) !important;
+}
+
+/* Estado Seleccionado (Checked): Adopta de forma plena el color institucional */
+.custom-radio-input:checked+.custom-radio-label {
+    border-color: var(--color-primary) !important;
+    background-color: var(--color-primary) !important;
+    color: var(--white) !important;
+    box-shadow: 0 4px 12px rgba(30, 43, 88, 0.25);
+}
+
+/* Botón de envío con el gradiente e identidad institucional */
+.btn-evaluacion-submit {
+    border-radius: var(--border-radius-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%) !important;
+    color: var(--white) !important;
+    border: none !important;
+    font-weight: 600;
+    padding: 0.85rem 1rem;
+    transition: var(--transition);
+}
+
+.btn-evaluacion-submit:hover {
+    background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary) 100%) !important;
+    box-shadow: 0 4px 15px rgba(30, 43, 88, 0.3) !important;
+}
+
+.btn-evaluacion-submit:active {
+    transform: scale(0.98);
+}
+
+/* Adaptación del foco de los campos de texto al color de la institución */
+.evaluacion-textarea:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 43, 88, 0.15) !important;
+}
+
+/* Ajustes responsivos específicos para el layout de la evaluación */
+@media (max-width: 768px) {
+    .pregunta-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        border-radius: var(--border-radius-md) !important;
+        /* Mantenemos ligera curvatura en móvil para UI premium */
+        padding: 1.25rem;
+    }
+}
+
+/* ========== COMPONENTE: AGRADECIMIENTO DE EVALUACIÓN (ANÓNIMO) ========== */
+
+/* Tarjeta principal con sombreado suave y elevación */
+.feedback-success-card {
+    background-color: var(--white) !important;
+    box-shadow: 0 10px 30px rgba(30, 43, 88, 0.08) !important;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Línea superior con el color institucional que unifica el diseño */
+.success-card-badge-top {
+    height: 6px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--primary-navy) 0%, var(--accent-blue) 100%);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Contenedor del ícono de éxito */
+.success-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(25, 135, 84, 0.1);
+    /* Tono suave basado en --color-success */
+    color: var(--color-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Efecto de onda expansiva animada para el ícono */
+.success-icon-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(25, 135, 84, 0.1);
+    z-index: -1;
+    animation: successPulse 2.5s infinite ease-out;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+
+/* Ajuste específico para el interlineado del texto descriptivo */
+.line-height-relaxed {
+    line-height: 1.6;
+}
+
+/* Asegurar adaptabilidad en dispositivos móviles extremos */
+@media (max-width: 576px) {
+    .feedback-success-card {
+        margin: 0 15px !important;
+        border-radius: var(--border-radius-lg) !important;
+    }
+
+    .success-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+    }
+}

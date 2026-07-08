@@ -153,10 +153,23 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
+                // Verifica en consola si los datos llegan:
+                console.log("Datos recibidos:", data);
+
+                // Función auxiliar para generar colores basados en el tono institucional (224°)
+                function generarColoresInstitucionales(cantidad) {
+                    const baseHue = 224; 
+                    return Array.from({ length: cantidad }, (_, index) => {
+                        // Luminosidad: 20% a 70% para asegurar contraste y visibilidad
+                        const lightness = 20 + (index * (50 / (cantidad > 1 ? cantidad - 1 : 1)));
+                        return `hsl(${baseHue}, 49%, ${lightness}%)`;
+                    });
+                }
+                
                 document.getElementById('lastUpdate').innerText = data.updated_at;
                 
                 // Destruir gráficos existentes antes de crear nuevos
-                ['chartEstado', 'chartTipo', 'chartTendencia'].forEach(id => {
+                ['chartEstado', 'chartTipo', 'chartTendencia', 'chartGenero', 'chartDiscapacidad'].forEach(id => {
                     if (charts[id]) charts[id].destroy();
                 });
 
@@ -170,12 +183,6 @@
                 
                 // Calculamos tasa
                 const tasa = total > 0 ? Math.round((confirmados / total) * 100) : 0;
-
-                const categorias = data.discapacidad;
-                const colores = categorias.map((_, index) => {
-                    // Genera un color HSL dinámico que cambia el tono (hue)
-                    return `hsl(${(index * 360) / categorias.length}, 70%, 60%)`;
-                });
 
                 // Actualizamos el DOM
                 document.getElementById('kpiTotal').innerText = total;
@@ -197,7 +204,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } }
+                        plugins: { legend: { position: 'left' } }
                     }
                 });
                 // --- 2. GRÁFICA DE TIPO (Bar) ---
@@ -254,16 +261,27 @@
                 });
 
                 // Gráfica de Género
+                const coloresGenero = generarColoresInstitucionales(data.genero.length);
                 charts['chartGenero'] = new Chart(document.getElementById('chartGenero').getContext('2d'), {
                     type: 'pie',
                     data: {
                         labels: data.genero.map(g => g.asistente__genero || 'No especificado'),
-                        datasets: [{ data: data.genero.map(g => g.cantidad), backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'] }]
+                        datasets: [{ 
+                            data: data.genero.map(g => g.cantidad), 
+                            backgroundColor: coloresGenero,
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                    }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,                        
+                        plugins: { legend: { position: 'left' } }
+                    }
                 });
 
                 // Gráfica de Discapacidad
+                const coloresDiscapacidad = generarColoresInstitucionales(data.discapacidad.length);
                 charts['chartDiscapacidad'] = new Chart(document.getElementById('chartDiscapacidad').getContext('2d'), {
                     type: 'doughnut',
                     data: {
@@ -271,10 +289,16 @@
                         labels: data.discapacidad.map(d => d.asistente__discapacidad__nombre_discapacidad || 'Sin Discapacidad'),
                         datasets: [{ 
                             data: data.discapacidad.map(d => d.cantidad), 
-                            backgroundColor: colores
+                            backgroundColor: coloresDiscapacidad,
+                            borderColor: '#ffffff',
+                            borderWidth: 2
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'left' } }
+                    }
                 });
             });
     }
