@@ -55,17 +55,6 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm p-4">
-                <h5 class="text-muted fw-bold mb-3">Promedio por Pregunta</h5>
-                <div style="height: 300px;">
-                    <canvas id="satisfaccionChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
         {% for item in detalle_respuestas %}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm p-3">
@@ -96,24 +85,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('satisfaccionChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: [{% for p in analisis %}"{{ p.texto|truncatechars:15 }}",{% endfor %}],
-            datasets: [{
-                label: 'Calificación Promedio',
-                data: [{% for p in analisis %}{{ p.promedio|default:0|floatformat:2 }},{% endfor %}],
-                backgroundColor: '#1e2b58',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, max: 5 } }
-        }
-    });
 
     {% for item in detalle_respuestas %}
         (function() {
@@ -145,7 +116,18 @@
                 options: { 
                     responsive: true, 
                     plugins: { 
-                        legend: { position: 'left' }
+                        legend: { position: 'left' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
                     } 
                 }
             });

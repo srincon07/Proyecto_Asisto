@@ -134,6 +134,26 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title m-0 fw-bold">Asistencia según Línea de Acción</h5>
+            </div>
+            <div class="card-body"><canvas id="chartLinea"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title m-0 fw-bold">Asistencia según Objetivo</h5>
+            </div>
+            <div class="card-body"><canvas id="chartObjetivo"></canvas></div>
+        </div>
+    </div>
+</div>
+
 </div>
 {% endblock %}
 
@@ -169,7 +189,7 @@
                 document.getElementById('lastUpdate').innerText = data.updated_at;
                 
                 // Destruir gráficos existentes antes de crear nuevos
-                ['chartEstado', 'chartTipo', 'chartTendencia', 'chartGenero', 'chartDiscapacidad'].forEach(id => {
+                ['chartEstado', 'chartTipo', 'chartTendencia', 'chartGenero', 'chartDiscapacidad', 'chartLinea', 'chartObjetivo'].forEach(id => {
                     if (charts[id]) charts[id].destroy();
                 });
 
@@ -204,7 +224,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'left' } }
+                        plugins: { 
+                            legend: { position: 'left' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
                 // --- 2. GRÁFICA DE TIPO (Bar) ---
@@ -276,7 +309,20 @@
                     options: { 
                         responsive: true, 
                         maintainAspectRatio: false,                        
-                        plugins: { legend: { position: 'left' } }
+                        plugins: { 
+                            legend: { position: 'left' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
 
@@ -297,9 +343,49 @@
                     options: { 
                         responsive: true, 
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'left' } }
+                        plugins: { 
+                            legend: { position: 'left' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
+
+                // Gráfica de Líneas (Ejemplo usando Chart.js)
+                charts['chartLinea'] = new Chart(document.getElementById('chartLinea').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.linea.map(l => l.actividad__id_tipo_actividad__id_linea__nombre_linea || 'Sin Línea'),
+                        datasets: [
+                            { label: 'Asistentes Únicos', data: data.linea.map(l => l.total_asistentes), backgroundColor: primaryColor },
+                            { label: 'Total Participaciones', data: data.linea.map(l => l.total_participaciones), backgroundColor: secondaryColor }
+                        ]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                });
+
+                // Gráfica de Objetivos
+                charts['chartObjetivo'] = new Chart(document.getElementById('chartObjetivo').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.objetivo.map(l => l.actividad__id_tipo_actividad__id_linea__id_objetivo__nombre_objetivo || 'Sin Objetivo'),
+                        datasets: [
+                            { label: 'Asistentes Únicos', data: data.objetivo.map(l => l.total_asistentes), backgroundColor: primaryColor },
+                            { label: 'Total Participaciones', data: data.objetivo.map(l => l.total_participaciones), backgroundColor: secondaryColor }
+                        ]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                });
+
             });
     }
     

@@ -49,6 +49,22 @@ def obtener_datos_dashboard(actividad_id=None):
         stats_discapacidad = list(qs_asistencia.values('asistente__discapacidad__nombre_discapacidad')
                                   .annotate(cantidad=Count('id')))
         
+        # 6. Participación por Línea
+        stats_linea = list(qs_asistencia.values(
+            'actividad__id_tipo_actividad__id_linea__nombre_linea'
+        ).annotate(
+            total_asistentes=Count('asistente', distinct=True), # Asistentes únicos por línea
+            total_participaciones=Count('id')                   # Total de veces que han participado
+        ))
+
+        # 7. Participación por Objetivo
+        stats_objetivo = list(qs_asistencia.values(
+            'actividad__id_tipo_actividad__id_linea__id_objetivo__nombre_objetivo'
+        ).annotate(
+            total_asistentes=Count('asistente', distinct=True),
+            total_participaciones=Count('id')
+        ))
+        
         local_tz = ZoneInfo("America/Bogota") # O tu zona horaria correspondiente
         time_now = timezone.now().astimezone(local_tz)
 
@@ -58,6 +74,8 @@ def obtener_datos_dashboard(actividad_id=None):
             "tendencia": stats_tendencia,
             "genero": stats_genero,
             "discapacidad": stats_discapacidad,
+            "linea": stats_linea,
+            "objetivo": stats_objetivo,
             "updated_at": time_now.strftime("%H:%M:%S")
         }
         
