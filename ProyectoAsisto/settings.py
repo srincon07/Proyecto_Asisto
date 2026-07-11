@@ -196,3 +196,6 @@ if 'LOGS_DIR' in os.environ:
             },
         },
     }
+    
+# Cache transformers model locally
+os.environ['HF_HOME'] = os.path.join(BASE_DIR, 'ml_models')

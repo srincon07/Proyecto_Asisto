@@ -66,41 +66,134 @@
     </div>
 
     <div class="row mb-4">
+        
+    </div>
+
+    <div class="row mb-4">
         <div class="col-md-12">
             <div class="card shadow-sm p-4" style="max-height: 400px; overflow-y: auto;">
                 <h5 class="text-muted fw-bold mb-3">Comentarios Recientes</h5>
+
+                <div class="d-flex justify-content-center mb-3 p-3 border rounded-2">
+                    <div class="card col-md-3 shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-3 text-uppercase small fw-bold">
+                                <i class="bi bi-chat-heart-fill"></i> Sentimiento
+                            </h6>
+                            
+                            {% if total_comentarios > 0 %}
+                                <!-- Sentiment Gauge -->
+                                <div class="text-center mb-3">
+                                    <canvas id="sentimentGauge" style="max-height: 120px;"></canvas>
+                                </div>
+                                
+                                <!-- Distribution -->
+                                <div class="small">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span><i class="bi bi-hand-thumbs-up text-success"></i> Positivos</span>
+                                        <strong>{{ comentarios_positivos }}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span><i class="bi bi-dash-circle text-muted"></i> Neutrales</span>
+                                        <strong>{{ comentarios_neutrales }}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="bi bi-hand-thumbs-down text-danger"></i> Negativos</span>
+                                        <strong>{{ comentarios_negativos }}</strong>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted small">Sin comentarios</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 {% for comentario in comentarios %}
-                    <div class="mb-3 p-2 border-bottom">
-                        <small class="text-muted d-block">{{ comentario.fecha_creacion|date:"d M, H:i" }}</small>
-                        <p class="mb-0 text-dark">{{ comentario.texto }}</p>
+                    <div class="mb-3 p-3 border rounded-2" style="border-color: {% if comentario.label == 'POSITIVE' %}#d4edda{% elif comentario.label == 'NEGATIVE' %}#f8d7da{% else %}#e2e3e5{% endif %} !important;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-muted d-block">{{ comentario.fecha|date:"d M, H:i" }}</small>
+                                <p class="mb-0 text-dark">{{ comentario.texto }}</p>
+                            </div>
+                            <span class="badge {% if comentario.label == 'POSITIVE' %}bg-success{% elif comentario.label == 'NEGATIVE' %}bg-danger{% else %}bg-secondary{% endif %}" style="font-size: 0.75rem;">
+                                {% if comentario.label == 'POSITIVE' %}
+                                    😊 Positivo
+                                {% elif comentario.label == 'NEGATIVE' %}
+                                    😞 Negativo
+                                {% else %}
+                                    😐 Neutral
+                                {% endif %}
+                            </span>
+                        </div>
+                        <small class="text-muted d-block mt-2">Confianza: {{ comentario.score|floatformat:1 }}%</small>
                     </div>
                 {% empty %}
                     <p class="text-muted">No hay comentarios aún.</p>
                 {% endfor %}
             </div>
         </div>
-    </div>    
-
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 
+    // FUNCIÓN CORPORATIVA: Genera colores basados en el tono institucional
+    function generarColoresInstitucionales(cantidad) {
+        const baseHue = 224; 
+        return Array.from({ length: cantidad }, (_, index) => {
+            // Luminosidad: 20% a 70% para asegurar contraste y visibilidad
+            const lightness = 20 + (index * (50 / (cantidad > 1 ? cantidad - 1 : 1)));
+            return `hsl(${baseHue}, 49%, ${lightness}%)`;
+        });
+    }
+
+    // SENTIMENT GAUGE
+    {% if total_comentarios > 0 %}
+        const positivos = {{ comentarios_positivos }};
+        const negativos = {{ comentarios_negativos }};
+        const neutrales = {{ comentarios_neutrales }};
+        const total = positivos + negativos + neutrales;
+
+        const colores = generarColoresInstitucionales(total);
+        
+        new Chart(document.getElementById('sentimentGauge'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Positivos', 'Neutrales', 'Negativos'],
+                datasets: [{
+                    data: [positivos, neutrales, negativos],
+                    backgroundColor: colores,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'left' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    {% endif %}
+
+    // QUESTION CHARTS - Using corporate color function
     {% for item in detalle_respuestas %}
         (function() {
             const dataValues = {{ item.valores|safe }};
             const total = dataValues.length;
             
-            // Tono base institucional: #1e2b58 es aproximadamente 224 grados
-            const baseHue = 224; 
-            
-            const colores = dataValues.map((_, index) => {
-                // Mapeamos la luminosidad: 
-                // Las opciones irán de 20% (muy oscuro) a 70% (más claro)
-                // Esto asegura que siempre haya contraste suficiente
-                const lightness = 20 + (index * (50 / (total > 1 ? total - 1 : 1)));
-                return `hsl(${baseHue}, 49%, ${lightness}%)`;
-            });
+            const colores = generarColoresInstitucionales(total);
 
             new Chart(document.getElementById('chart_{{ forloop.counter0 }}'), {
                 type: 'doughnut',

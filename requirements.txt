@@ -17,3 +17,6 @@ six==1.17.0
 sqlparse==0.5.5
 tzdata==2026.2
 urllib3==2.7.0
+transformers>=4.30.0
+torch>=2.0.0
+numpy>=1.23.0
