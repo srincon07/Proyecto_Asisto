@@ -34,22 +34,6 @@
     <!-- Tabla de Contenido -->
     <div class="card shadow border-0">
         <div class="card-body p-0">
-            <div class="p-3 bg-light border-bottom">
-                <div class="input-group shadow-sm max-width-md" style="max-width: 500px;">
-                    <span class="input-group-text bg-white border-end-0 text-muted">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text" 
-                           id="inputBuscadorEventos" 
-                           class="form-control border-start-0 ps-0" 
-                           placeholder="Buscar por evento, responsable, tipo o estado..."
-                           autocomplete="off">
-                    <button class="btn btn-outline-secondary border-start-0" type="button" id="btnLimpiarBuscar" style="display: none;">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </button>
-                </div>
-            </div>
-
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
@@ -63,7 +47,7 @@
                     </thead>
                     <tbody>
                         {% for row in actividades %}
-                        <tr class="{{ row.fila_class }} row-evento">
+                        <tr class="{{ row.fila_class }}">
                             <td class="text-primary ps-3">
                                 <strong>{{ row.nombre_evento }}</strong><br>
                                 <small class="text-muted">
@@ -155,24 +139,11 @@
 
                         </tr>
                         {% empty %}
-                        <tr id="filaTotalmenteVacia">
-                            <td colspan="5" class="text-center p-4 text-muted">No hay eventos programados.</td>
-                        </tr>
+                        <tr><td colspan="5" class="text-center p-4 text-muted">No hay eventos programados.</td></tr>
                         {% endfor %}
-                        
-                        <tr id="filaSinResultadosBusqueda" style="display: none;">
-                            <td colspan="5" class="text-center p-5 text-muted fst-italic fw-semibold">
-                                <i class="bi bi-exclamation-circle me-2"></i> No se encontraron eventos que coincidan con los criterios de búsqueda.
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div class="card-footer bg-light py-3 px-4">
-            <small class="text-muted">
-                <i class="bi bi-info-circle me-1"></i> Total de eventos registrados: <strong>{{ actividades|length }}</strong>
-            </small>
         </div>
     </div>
 </div>
@@ -208,48 +179,6 @@ function verQR(evento, link) {
 
 // Escucha de notificaciones enviadas desde Django mediante messages framework
 document.addEventListener('DOMContentLoaded', function() {
-    // --- LÓGICA DE BÚSQUEDA EN TIEMPO REAL ---
-    const buscador = document.getElementById('inputBuscadorEventos');
-    const btnLimpiar = document.getElementById('btnLimpiarBuscar');
-    const filas = document.querySelectorAll('.row-evento');
-    const filaSinResultados = document.getElementById('filaSinResultadosBusqueda');
-
-    if (buscador) {
-        buscador.addEventListener('input', function() {
-            const query = buscador.value.toLowerCase().trim();
-            let registrosVisibles = 0;
-
-            // Mostrar u ocultar el botón 'X' de limpieza
-            btnLimpiar.style.display = query.length > 0 ? 'block' : 'none';
-
-            filas.forEach(fila => {
-                // Evaluamos todo el texto contenido en las celdas de la fila
-                const textoFila = fila.textContent.toLowerCase();
-
-                if (query === '' || textoFila.includes(query)) {
-                    fila.style.display = ''; // Muestra la fila
-                    registrosVisibles++;
-                } else {
-                    fila.style.display = 'none'; // Oculta la fila
-                }
-            });
-
-            // Control de visibilidad del mensaje "No se encontraron resultados"
-            if (filaSinResultados) {
-                filaSinResultados.style.display = registrosVisibles === 0 && query !== '' ? '' : 'none';
-            }
-        });
-    }
-
-    // Acción del botón 'X' para limpiar el buscador inmediatamente
-    if (btnLimpiar) {
-        btnLimpiar.addEventListener('click', function() {
-            buscador.value = '';
-            buscador.dispatchEvent(new Event('input')); // Dispara el filtro para restaurar la tabla
-            buscador.focus();
-        });
-    }
-
     document.querySelectorAll('.btn-qr').forEach(function(button) {
         button.addEventListener('click', function() {
             verQR(this.dataset.evento, this.dataset.link);
