@@ -9,7 +9,6 @@ from Eventos.models import ActividadProgramada, RegistroAsistencia
 from .models import Evaluacion, Pregunta, OpcionRespuesta, RespuestaAnonima, ComentarioAnonimo
 from .forms import EvaluacionForm, PreguntaFormSet, OpcionFormSet
 from .services import send_mail_evaluacion
-from .sentiment_service import get_sentiment_analyzer
 
 
 @login_required
@@ -248,32 +247,6 @@ def dashboard_evaluacion(request, actividad_id):
         })
         
     comentarios = evaluacion.comentarios.all().order_by('-fecha_creacion')
-    
-    # SENTIMENT ANALYSIS - Spanish Transformer
-    analyzer = get_sentiment_analyzer()
-    sentimientos = []
-    
-    for comentario in comentarios:
-        sentiment = analyzer.analyze(comentario.texto)
-        sentimientos.append({
-            'texto': comentario.texto,
-            'label': sentiment['label'],
-            'score': sentiment['score'],
-            'fecha': comentario.fecha_creacion
-        })
-    
-    # Metrics calculation
-    total_comentarios = len(sentimientos)
-    if sentimientos:
-        positivos = sum(1 for s in sentimientos if s['label'] == 'POSITIVE')
-        negativos = sum(1 for s in sentimientos if s['label'] == 'NEGATIVE')
-        neutrales = total_comentarios - positivos - negativos
-        
-        # Average sentiment score
-        promedio_score = sum(s['score'] for s in sentimientos) / total_comentarios
-    else:
-        positivos = negativos = neutrales = 0
-        promedio_score = 0
 
     return render(request, 'EvaluacionesApp/dashboard_evals.html', {
         'actividad': actividad,
@@ -282,10 +255,5 @@ def dashboard_evaluacion(request, actividad_id):
         'total_asistentes': total_asistentes,
         'total_evaluaciones_respuestas': participantes_reales,
         'detalle_respuestas': detalle_respuestas,
-        'comentarios': sentimientos,
-        'total_comentarios': total_comentarios,
-        'comentarios_positivos': positivos,
-        'comentarios_negativos': negativos,
-        'comentarios_neutrales': neutrales,
-        'sentiment_score': promedio_score,
+        'comentarios': comentarios,
     })

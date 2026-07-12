@@ -101,21 +101,6 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-activity me-2" style="color: #1e2b58;"></i>Tendencia de confirmaciones (últimos 30 días)</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 350px; position: relative;">
-                        <canvas id="chartTendencia"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row g-4 mb-4">
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
@@ -136,24 +121,38 @@
     </div>
 
     <div class="row g-4 mb-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="card-title m-0 fw-bold">Asistencia según línea de acción</h5>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title m-0 fw-bold">Asistencia según línea de acción</h5>
+                </div>
+                <div class="card-body"><canvas id="chartLinea"></canvas></div>
             </div>
-            <div class="card-body"><canvas id="chartLinea"></canvas></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title m-0 fw-bold">Asistencia según objetivo</h5>
+                </div>
+                <div class="card-body"><canvas id="chartObjetivo"></canvas></div>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="card-title m-0 fw-bold">Asistencia según objetivo</h5>
-            </div>
-            <div class="card-body"><canvas id="chartObjetivo"></canvas></div>
-        </div>
-    </div>
-</div>
 
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title m-0 fw-bold text-dark"><i class="bi bi-activity me-2" style="color: #1e2b58;"></i>Tendencia de confirmaciones (últimos 30 días)</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px; position: relative;">
+                        <canvas id="chartTendencia"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
