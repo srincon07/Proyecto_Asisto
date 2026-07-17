@@ -731,6 +731,9 @@ def procesar_asistencia_ajax(request, actividad_id):
                     )
                 except Cargo.DoesNotExist:
                     pass
+                
+            # Generación del código condicional
+            token_pase = f"PASE-{uuid.uuid4().hex[:8].upper()}"
 
             registro, creado_reg = RegistroAsistencia.objects.get_or_create(
                 actividad=actividad,
@@ -738,7 +741,7 @@ def procesar_asistencia_ajax(request, actividad_id):
                 defaults={
                     "estado": "CONFIRMADO",
                     "fecha_confirmacion": ahora,
-                    # "observaciones": observaciones if observaciones else None
+                    "codigo_pase_unico": token_pase,
                 },
             )
 
