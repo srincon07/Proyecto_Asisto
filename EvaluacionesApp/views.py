@@ -1,5 +1,7 @@
 from django.db import transaction
 from django.db.models import Avg, Count
+from django.utils.decorators import method_decorator
+from django.views.generic import DetailView
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,7 +11,6 @@ from Eventos.models import ActividadProgramada, RegistroAsistencia
 from .models import Evaluacion, Pregunta, OpcionRespuesta, RespuestaAnonima, ComentarioAnonimo
 from .forms import EvaluacionForm, PreguntaFormSet, OpcionFormSet
 from .services import send_mail_evaluacion
-
 
 @login_required
 @es_miembro_grupo('Organizador')
@@ -213,47 +214,62 @@ def mostrar_evaluacion(request, actividad_id, token_asistencia):
 def agradecimiento(request, ):
     return render(request, 'EvaluacionesApp/agradecimiento.html')
 
+@method_decorator(es_miembro_grupo('Administrador','Organizador'), name='dispatch')
+class DashboardEvaluacionView(DetailView):
+    model = ActividadProgramada
+    template_name = 'EvaluacionesApp/dashboard_evals.html'
+    context_object_name = 'actividad'
+    pk_url_kwarg = 'actividad_id'
 
-@login_required
-def dashboard_evaluacion(request, actividad_id):
-    actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
-    evaluacion = actividad.evaluacion
-    
-    # KPIs Básicos
-    total_asistentes = actividad.asistencias.filter(estado='CONFIRMADO').count()
-    
-    # Total de personas que REALMENTE respondieron
-    participantes_reales = RegistroAsistencia.objects.filter(
-        actividad=actividad, 
-        evaluacion_completada=True
-    ).count()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        actividad = self.object
         
-    # Análisis de preguntas
-    analisis = evaluacion.preguntas.annotate(
-        promedio=Avg('respuestas__opcion__valor'),
-        total_respuestas=Count('respuestas')
-    )
-    
-    # Análisis detallado: Pregunta -> Opción -> Cantidad
-    detalle_respuestas = []
-    for pregunta in evaluacion.preguntas.all():
-        opciones_conteo = pregunta.opciones.annotate(
-            conteo=Count('respuestaanonima')
+        evaluacion = getattr(actividad, 'evaluacion', None)
+        
+        if not evaluacion:
+            context.update({
+                'analisis': [],
+                'tasa_participacion': 0,
+                'total_asistentes': 0,
+                'total_evaluaciones_respuestas': 0,
+                'detalle_respuestas': [],
+                'comentarios': [],
+            })
+            return context
+
+        total_asistentes = actividad.asistencias.filter(estado='CONFIRMADO').count()
+        
+        participantes_reales = RegistroAsistencia.objects.filter(
+            actividad=actividad,
+            evaluacion_completada=True
+        ).count()
+            
+        analisis = evaluacion.preguntas.annotate(
+            promedio=Avg('respuestas__opcion__valor'),
+            total_respuestas=Count('respuestas')
         )
-        detalle_respuestas.append({
-            'pregunta': pregunta.texto,
-            'opciones': [opc.label for opc in opciones_conteo],
-            'valores': [opc.conteo for opc in opciones_conteo]
+        
+        detalle_respuestas = []
+        for pregunta in evaluacion.preguntas.all():
+            opciones_conteo = pregunta.opciones.annotate(
+                conteo=Count('respuestaanonima')
+            )
+            detalle_respuestas.append({
+                'pregunta': pregunta.texto,
+                'opciones': [opc.label for opc in opciones_conteo],
+                'valores': [opc.conteo for opc in opciones_conteo]
+            })
+            
+        comentarios = evaluacion.comentarios.all().order_by('-fecha_creacion')
+
+        context.update({
+            'analisis': analisis,
+            'tasa_participacion': (participantes_reales / total_asistentes * 100) if total_asistentes > 0 else 0,
+            'total_asistentes': total_asistentes,
+            'total_evaluaciones_respuestas': participantes_reales,
+            'detalle_respuestas': detalle_respuestas,
+            'comentarios': comentarios,
         })
         
-    comentarios = evaluacion.comentarios.all().order_by('-fecha_creacion')
-
-    return render(request, 'EvaluacionesApp/dashboard_evals.html', {
-        'actividad': actividad,
-        'analisis': analisis,
-        'tasa_participacion': (participantes_reales / total_asistentes * 100) if total_asistentes > 0 else 0,
-        'total_asistentes': total_asistentes,
-        'total_evaluaciones_respuestas': participantes_reales,
-        'detalle_respuestas': detalle_respuestas,
-        'comentarios': comentarios,
-    })
+        return context

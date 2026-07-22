@@ -29,7 +29,7 @@
                                     <th>apellidos</th>
                                     <th>correo</th>
                                     <th>telefono</th>
-                                    <th>empresa o dependencia</th>
+                                    <th>organizacion_o_dependencia</th>
                                     <th>genero</th>
                                 </tr>
                             </thead>
@@ -62,6 +62,16 @@
                             </button>
                         </div>
                     </form>
+
+                    {% if errores_csv %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for error in errores_csv %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
 
                 </div>
             </div>

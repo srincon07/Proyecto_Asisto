@@ -39,7 +39,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Generamos la URL dinámicamente usando el reverse name de Django
-        const urlValidacion = "{% url 'Eventos:validar_codigo_asistencia_ajax' actividad.id %}";
+        const urlValidacion = "{% url 'Eventos:validar_asistencia_ajax' actividad.id %}";
         const inputCodigo = document.getElementById("input-codigo");
         const btnManual = document.getElementById("btn-validar-manual");
 

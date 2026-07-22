@@ -28,14 +28,14 @@ urlpatterns = [
         name="panel_asistentes_actividad",
     ),
     path(
-        "actividad/<int:actividad_id>/verificar/",
-        views.verificar_asistente_ajax,
-        name="verificar_asistente_ajax",
+        'actividad/<int:actividad_id>/verificar-asistente/',
+        views.VerificarAsistenteAjaxView.as_view(),
+        name='verificar_asistente_ajax'
     ),
     path(
-        "actividad/<int:actividad_id>/procesar/",
-        views.procesar_asistencia_ajax,
-        name="procesar_asistencia_ajax",
+        'asistencia/<int:actividad_id>/procesar/',
+        views.ProcesarAsistenciaView.as_view(),
+        name='procesar_asistencia'
     ),
     path(
         "actividad/<int:actividad_id>/escanear/",
@@ -43,20 +43,14 @@ urlpatterns = [
         name="interfaz_escaneo_asistencia",
     ),
     path(
-        "actividad/<int:actividad_id>/validar-codigo-ajax/",
-        views.validar_codigo_asistencia_ajax,
-        name="validar_codigo_asistencia_ajax",
+        'actividad/<int:actividad_id>/validar-asistencia/',
+        views.ValidarAsistenciaAjaxView.as_view(),
+        name='validar_asistencia_ajax'
     ),
-    path(
-        "cargue_masivo/<int:actividad_id>/",
-        views.importar_asistentes_csv,
-        name="importar_asistentes_csv",
-    ),
-    path(
-        "roles/disponibles/",
-        views.obtener_roles_disponibles,
-        name="obtener_roles_disponibles",
-    ),
+    path('actividad/<int:actividad_id>/importar/',
+         views.CargaMasivaView.as_view(),
+         name='importar_asistentes',
+         ),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('api/indicadores/', views.api_indicadores, name='api_indicadores'),
 ]

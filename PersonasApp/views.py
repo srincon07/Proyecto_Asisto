@@ -1,13 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from .models import Persona
 from django.contrib import messages
 from .forms import PersonaForm
 from .decorators import es_miembro_grupo  # Importación de decoradores personalizados
 
-
-
-@login_required
 @es_miembro_grupo('Administrador')
 def lista_personas(request):
     # Consulta optimizada ordenando por las nuevas columnas independientes
@@ -18,7 +14,6 @@ def lista_personas(request):
     )
     return render(request, "PersonasApp/lista_personas.html", {"personas": personas})
 
-@login_required
 @es_miembro_grupo('Administrador')
 def registrar_editar_persona(request, pk=None):
     if pk:
@@ -46,7 +41,6 @@ def registrar_editar_persona(request, pk=None):
         {"form": form, "persona": persona, "id_persona": pk or 0, "status": status},
     )
 
-@login_required
 @es_miembro_grupo('Administrador')
 def eliminar_persona(request, pk):
     persona = get_object_or_404(Persona, pk=pk)

@@ -14,9 +14,9 @@ class ActividadProgramadaForm(forms.ModelForm):
             "id_responsable",
             "requiere_preregistro",
             "minutos_anticipacion_cierre",
-            "permite_qr_invertido",  # <- Agregado
-            "confirmacion_asistencia_temporal",  # <- Agregado
-            "minutos_duracion_enlace",  # <- Agregado
+            "permite_qr_invertido",
+            "confirmacion_asistencia_temporal",
+            "minutos_duracion_enlace",
             "fecha_hora_inicio",
             "fecha_hora_fin",
             "lugar_desarrollo",

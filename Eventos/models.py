@@ -21,7 +21,7 @@ class ActividadProgramada(models.Model):
         verbose_name="Responsable",
     )
     requiere_preregistro = models.BooleanField(
-        default=True, verbose_name="Requiere Preregistro"
+        default=False, verbose_name="Requiere Preregistro"
     )
     # Nuevo campo: Almacena los mminutos de anticipación para el cierre
     minutos_anticipacion_cierre = models.PositiveIntegerField(

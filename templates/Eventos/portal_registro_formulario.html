@@ -79,7 +79,7 @@
                         <div id="bloqueIdentificacion">
                             <h5 class="fw-bold text-secondary mb-3 text-center">Ingrese su Identificación</h5>
                             <div class="form-floating mb-3">
-                                <input type="text" name="documento" class="form-control" id="fDoc" placeholder="ID" required>
+                                <input type="text" name="identificacion" class="form-control" id="fDoc" placeholder="ID" required>
                                 <label for="fDoc"><i class="bi bi-card-text me-2"></i>Documento de Identidad</label>
                             </div>
                             <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnSiguiente">
@@ -106,13 +106,13 @@
                             
                             <!-- Nombres -->
                             <div class="form-floating mb-3">
-                                <input type="text" name="nombre" class="form-control" id="fNom" placeholder="Nombres" required>
+                                <input type="text" name="nombres" class="form-control" id="fNom" placeholder="Nombres" required>
                                 <label for="fNom"><i class="bi bi-person me-2"></i>Nombre(s)</label>
                             </div>
                             
                             <!-- Apellidos -->
                             <div class="form-floating mb-3">
-                                <input type="text" name="apellido" class="form-control" id="fApe" placeholder="Apellidos" required>
+                                <input type="text" name="apellidos" class="form-control" id="fApe" placeholder="Apellidos" required>
                                 <label for="fApe"><i class="bi bi-person-bounding-box me-2"></i>Apellido(s)</label>
                             </div>
                             
@@ -130,7 +130,7 @@
                             
                             <!-- Empresa/Dependencia -->
                             <div class="form-floating mb-3">
-                                <input type="text" name="organizacion_origen" class="form-control" id="fOrg" placeholder="Empresa/Dependencia">
+                                <input type="text" name="organizacion_o_dependencia" class="form-control" id="fOrg" placeholder="Empresa/Dependencia">
                                 <label for="fOrg"><i class="bi bi-building me-2"></i>Empresa o Dependencia</label>
                             </div>
                             
@@ -229,7 +229,7 @@
                     return;
                 }
 
-                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?documento=${docValue}`)
+                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?identificacion=${docValue}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'YA_CONFIRMADO') {
@@ -239,7 +239,7 @@
                         Swal.fire('Ya Registrado', data.message, 'info').then(() => location.reload());
                     } 
                     else if (data.status === 'SOLICITAR_PIN') {
-                        document.getElementById('txtNombrePin').innerText = data.nombre;
+                        document.getElementById('txtNombrePin').innerText = data.nombres;
                         inputAccion.value = 'procesar_pin';
                         bIdentificacion.style.display = 'none';
                         bPin.style.display = 'block';
@@ -280,8 +280,8 @@
                         // ---------------------------------------------
                         
                         if(data.status === 'COMPLETAR_REGISTRO') {
-                            document.getElementById('fNom').value = data.nombre;
-                            document.getElementById('fApe').value = data.apellido;
+                            document.getElementById('fNom').value = data.nombres;
+                            document.getElementById('fApe').value = data.apellidos;
                             document.getElementById('fMail').value = data.correo;
                             document.getElementById('fOrg').value = data.organizacion_origen;
                             document.getElementById('fTel').value = data.telefono || '';
@@ -308,14 +308,14 @@
 
             // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO ---
             btnRegistrarFinal.addEventListener('click', function() {
-                const nombre = document.getElementById('fNom').value;
-                const apellido = document.getElementById('fApe').value;
+                const nombres = document.getElementById('fNom').value;
+                const apellidos = document.getElementById('fApe').value;
                 const genero = document.getElementById('fGenero').value;
                 const correo = document.getElementById('fMail').value;
                 const cargo = document.getElementById('fCargo').value; // Validar el cargo institucional
 
-                if(!nombre || !apellido || !genero || !correo || !cargo) {
-                    Swal.fire('Campos requeridos', 'Por favor complete nombre, apellido, correo, género y cargo.', 'warning');
+                if(!nombres || !apellidos || !genero || !correo || !cargo) {
+                    Swal.fire('Campos requeridos', 'Por favor complete nombres, apellidos, correo, género y cargo.', 'warning');
                     return;
                 }
                 const formData = new FormData(document.getElementById('formAsistencia'));
@@ -338,7 +338,7 @@
                 // 2. Lanzar la alerta de carga (ya la tienes configurada en loadingConfig)
                 Swal.fire(loadingConfig);
 
-                fetch(`{% url 'Eventos:procesar_asistencia_ajax' actividad.id %}`, {
+                fetch(`{% url 'Eventos:procesar_asistencia' actividad.id %}`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': token },
                     body: formData

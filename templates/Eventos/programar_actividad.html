@@ -148,7 +148,7 @@
                         {% if cargue_masivo %}
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Cargue Masivo</label>
-                                <a href="{% url 'Eventos:importar_asistentes_csv' actividad_id=evento.id %}" class="btn btn-light border text-secondary">Cargar Archivo</a>
+                                <a href="{% url 'Eventos:importar_asistentes' actividad_id=evento.id %}" class="btn btn-light border text-secondary">Cargar Archivo</a>
                             </div>
                         {% endif %}
                     </div>

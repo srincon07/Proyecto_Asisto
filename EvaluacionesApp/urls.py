@@ -9,5 +9,5 @@ urlpatterns = [
     path('evaluar/<int:actividad_id>/<str:token_asistencia>/', views.mostrar_evaluacion, name='responder_evaluacion'),
     path('gestionar_envio/<int:actividad_id>/', views.gestionar_evaluacion, name='gestionar_envio'),
     path('evaluacion/agradecimiento/', views.agradecimiento, name='agradecimiento'),
-    path('evaluacion/dashboard_evaluacion/<int:actividad_id>/', views.dashboard_evaluacion, name='dashboard_evaluacion'),
+    path('dashboard/<int:actividad_id>/', views.DashboardEvaluacionView.as_view(), name='dashboard_evaluacion'),
 ]

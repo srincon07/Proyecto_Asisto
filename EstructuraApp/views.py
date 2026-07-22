@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.http import JsonResponse
@@ -20,7 +20,6 @@ from .forms import (
     TipoActividadForm,
 )  # Formularios creados con ModelForm
 
-@login_required
 @es_miembro_grupo('Administrador')
 def gestionar_estructura(request, edit_tipo=None, pk=None):
     # 1. Lógica para cargar datos en caso de edición
@@ -72,7 +71,6 @@ def gestionar_estructura(request, edit_tipo=None, pk=None):
     }
     return render(request, "EstructuraApp/registro_estructura.html", context)
 
-@login_required
 @es_miembro_grupo('Administrador')
 def gestionar_tipos(request, pk=None):
     # Lógica de carga para edición (Equivalente al IF de tu PHP)
@@ -101,7 +99,6 @@ def gestionar_tipos(request, pk=None):
 
 
 # Vista complementaria para eliminar de forma segura
-@login_required
 @es_miembro_grupo('Administrador')
 def eliminar_tipo(request, pk):
     tipo = get_object_or_404(TipoActividad, pk=pk)
@@ -113,7 +110,6 @@ def eliminar_tipo(request, pk):
         messages.error(request, "error_relacion")
     return redirect("EstructuraApp:gestionar_tipos")
 
-@login_required
 @es_miembro_grupo('Administrador')
 def eliminar_estructura(request, edit_tipo, pk):
     if edit_tipo == "obj":
@@ -136,8 +132,8 @@ def eliminar_estructura(request, edit_tipo, pk):
     return redirect("EstructuraApp:gestion_estructura")
 
 
-# Endpoint AJAX que sustituye a get_jerarquia.php
-@login_required
+# Endpoint AJAX
+@es_miembro_grupo('Administrador')
 def api_get_jerarquia(request):
     objetivo_id = request.GET.get("objetivo_id")
     linea_id = request.GET.get("linea_id")
