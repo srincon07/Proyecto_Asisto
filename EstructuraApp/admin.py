@@ -18,7 +18,7 @@ class OrganizacionAdmin(admin.ModelAdmin):
     # Organizar el formulario de edición por secciones
     fieldsets = (
         ('Información General', {
-            'fields': ('nombre_organizacion', 'nit', 'direccion', 'telefono', 'correo_electronico', 'sitio_web') # Añade aquí tus otros campos de texto
+            'fields': ('nombre_organizacion', 'nit', 'direccion', 'telefono', 'correo_electronico', 'sitio_web', 'plan', 'limite_eventos_mes') # Añade aquí tus otros campos de texto
         }),
         ('Identidad Visual', {
             'fields': ('logo', 'preview_logo_form'),

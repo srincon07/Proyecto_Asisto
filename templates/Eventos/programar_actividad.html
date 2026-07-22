@@ -151,6 +151,7 @@
                                 <a href="{% url 'Eventos:importar_asistentes' actividad_id=evento.id %}" class="btn btn-light border text-secondary">Cargar Archivo</a>
                             </div>
                         {% endif %}
+
                     </div>
                 </div>
 
@@ -181,6 +182,8 @@
     </div>
 {% endblock %}
 
+<!-- In the existing form, replace the entire extra_js block with this -->
+
 {% block extra_js %}
 <script>
 
@@ -194,7 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const objVal = $('#obj').val();
         
         if(objVal) {
-            // Llamamos a la función de carga pasando los IDs guardados
             cargarLineas(objVal, pre_linea, pre_tipo);
         }
     {% endif %}
@@ -204,12 +206,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const chkAplicarEvaluacion = document.getElementById('id_aplicar_evaluacion');
     const chkQRInvertido = document.getElementById('id_permite_qr_invertido');
     const chkTemporal = document.getElementById('id_asistencia_temporal');
+
     const divPreregistro = document.getElementById('contenedor-preregistro');
     const divSinPreregistro = document.getElementById('contenedor-sin-preregistro');
     const divTiempoTemporal = document.getElementById('contenedor-tiempo-temporal');
     const divMinutos = document.getElementById('div-minutos-cierre');
     const inputMinutos = document.querySelector('[name="minutos_anticipacion_cierre"]');
+    const inputPIN = document.querySelector('[name="pin_confirmacion"]');
+    const objetivoSelect = document.getElementById('obj');
 
+    // Identificar los contenedores principales (padres) de cada campo para ocultarlos/mostrarlos
+    const wrapperPreregistro = chkPreregistro ? chkPreregistro.closest('.mb-3') : null;
+    const wrapperPIN = inputPIN ? inputPIN.closest('.mb-3') : null;
+    const wrapperEvaluacion = chkAplicarEvaluacion ? chkAplicarEvaluacion.closest('.mb-3') : null;
+    const wrapperQRInvertido = chkQRInvertido ? chkQRInvertido.closest('.form-check') : null; // o el contenedor superior
+
+    async function updatePlanRestrictions() {
+        const objetivoId = objetivoSelect.value;
+        
+        if (!objetivoId) {
+            showAllFeatures();
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `{% url 'Eventos:get_plan_restrictions' %}?objetivo_id=${objetivoId}`
+            );
+            const data = await response.json();
+
+            applyPlanVisibility(data);
+
+            // Evaluar si se ha alcanzado el límite mensual de eventos para la organización (Solo en nuevos registros)
+            {% if not evento %}
+            if (data.limite_alcanzado) {
+                Swal.fire({
+                    title: '¡Límite de eventos alcanzado!',
+                    text: `Tu organización ha alcanzado el límite de ${data.limite_maximo} eventos permitidos para este mes (${data.eventos_mes}/${data.limite_maximo}).`,
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#1e2b58',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{% url 'Eventos:lista_eventos' %}";
+                    }
+                });
+            }
+            {% endif %}
+
+        } catch (error) {
+            console.error('Error fetching plan restrictions:', error);
+        }
+    }
+
+    // EXISTING DISABLE LOGIC - Preservar comportamiento actual
     {% if evento and evento.asistencias.exists %}
         if (chkPreregistro) {
             chkPreregistro.disabled = true;
@@ -222,7 +274,55 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     {% endif %}
 
-    // 3. Lógica de UI consolidada
+    function applyPlanVisibility(data) {
+        // 1. Preregistro
+        if (wrapperPreregistro) {
+            wrapperPreregistro.style.display = data.allow_preregistro ? 'block' : 'none';
+            if (!data.allow_preregistro && chkPreregistro) {
+                chkPreregistro.checked = false; // Desmarcar si se oculta
+                toggleFormulario();
+            }
+        }
+
+        // 2. PIN de Confirmación
+        if (wrapperPIN) {
+            wrapperPIN.style.display = data.allow_pin ? 'block' : 'none';
+            if (!data.allow_pin && inputPIN) {
+                inputPIN.value = ''; // Limpiar valor si se oculta
+            }
+        }
+
+        // 3. Evaluación
+        if (wrapperEvaluacion) {
+            wrapperEvaluacion.style.display = data.allow_evaluacion ? 'block' : 'none';
+            if (!data.allow_evaluacion && chkAplicarEvaluacion) {
+                chkAplicarEvaluacion.checked = false;
+            }
+        }
+
+        // 4. QR Invertido (dentro del contenedor de preregistro)
+        if (chkQRInvertido) {
+            const qrContainer = chkQRInvertido.closest('.form-check');
+            if (qrContainer) {
+                qrContainer.style.display = data.allow_qr_invertido ? 'block' : 'none';
+            }
+            if (!data.allow_qr_invertido) {
+                chkQRInvertido.checked = false;
+            }
+        }
+    }
+
+    function showAllFeatures() {
+        if (wrapperPreregistro) wrapperPreregistro.style.display = 'block';
+        if (wrapperPIN) wrapperPIN.style.display = 'block';
+        if (wrapperEvaluacion) wrapperEvaluacion.style.display = 'block';
+        if (chkQRInvertido) {
+            const qrContainer = chkQRInvertido.closest('.form-check');
+            if (qrContainer) qrContainer.style.display = 'block';
+        }
+    }
+
+    // LÓGICA DE UI CONSOLIDADA (PRESERVAR EXISTENTE)
     function toggleFormulario() {
         if (chkPreregistro && chkPreregistro.checked) {
             divPreregistro.style.display = 'block';
@@ -239,14 +339,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // EVENT LISTENERS - PRESERVAR EXISTENTES + AÑADIR NUEVO
     if (chkPreregistro) chkPreregistro.addEventListener('change', toggleFormulario);
     if (chkTemporal) chkTemporal.addEventListener('change', () => {
         divTiempoTemporal.style.display = chkTemporal.checked ? 'block' : 'none';
     });
 
-    toggleFormulario(); // Ejecución inicial
+    // Escuchar cambios en el Objetivo Estratégico
+    if (objetivoSelect) {
+        objetivoSelect.addEventListener('change', updatePlanRestrictions);
+    }
+
+    toggleFormulario();
+
+    // --- LÓGICA PARA NUEVOS REGISTROS: Evaluar y asignar el primer objetivo automáticamente ---
+    {% if not evento %}
+    if (objetivoSelect && !objetivoSelect.value) {
+        // Buscar la primera opción válida (excluyendo el placeholder vacío)
+        const primeraOpcionValida = objetivoSelect.querySelector('option:not([value=""])');
+        if (primeraOpcionValida) {
+            objetivoSelect.value = primeraOpcionValida.value;
+            // Cargar automáticamente las líneas de acción de este primer objetivo
+            cargarLineas(objetivoSelect.value);
+        }
+    }
+    {% endif %}
+    
+    // Ejecutar inmediatamente al renderizar si el objetivo ya cuenta con un valor seleccionado
+    if (objetivoSelect && objetivoSelect.value) {
+        updatePlanRestrictions();
+    }
 });
 
+// ... MANTENER FUNCIONES EXISTENTES (cargarLineas, cargarTipos, confirmarEliminacion)
 async function cargarLineas(id, selectDefault = "", tipoDefault = "") {
     if (!id) return;
     const lin = document.getElementById('lin');
@@ -254,14 +379,8 @@ async function cargarLineas(id, selectDefault = "", tipoDefault = "") {
     lin.innerHTML = '<option>Cargando...</option>';
     
     try {
-        // Asegúrate de que el URL sea correcto
         const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?objetivo_id=${id}`);
-        
-        // --- AQUÍ ESTABA PROBABLEMENTE EL ERROR ---
-        // Debes esperar a convertir la respuesta a JSON antes de usar 'data'
         const data = await resp.json(); 
-        
-        // Ahora 'data' está definida correctamente dentro de este ámbito
         lin.innerHTML = '<option value="">Seleccione Línea...</option>';
         
         data.forEach(l => {
@@ -284,7 +403,6 @@ async function cargarTipos(id, selectDefault = "") {
     tip.disabled = false;
     tip.innerHTML = '<option>Cargando...</option>';
     
-    // Apuntamos al endpoint estructurado en Django
     const resp = await fetch(`{% url "EstructuraApp:api_get_jerarquia" %}?linea_id=${id}`);
     const data = await resp.json();
     
@@ -295,7 +413,6 @@ async function cargarTipos(id, selectDefault = "") {
     });
 }
 
-// Función global fuera del evento (para ser accesible por el onclick)
 function confirmarEliminacion(id, nombre, estado) {
     Swal.fire({
         title: '¿Eliminar actividad?',
@@ -311,5 +428,6 @@ function confirmarEliminacion(id, nombre, estado) {
         }
     });
 }
+
 </script>
 {% endblock %}

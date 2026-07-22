@@ -1,3 +1,4 @@
+from datetime import datetime
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import TipoActividad, ActividadProgramada
@@ -77,8 +78,9 @@ class ActividadProgramadaForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user  # Guardamos el usuario actual para usarlo en la validación
 
         # Nota: Ajusta 'roles__nombre_rol' según cómo se llamen los campos relacionales en tu PersonasApp
         responsables_filtrados = (
@@ -95,6 +97,12 @@ class ActividadProgramadaForm(forms.ModelForm):
 
         # Dejamos el campo vacío inicialmente; se llenará dinámicamente vía JS/AJAX
         selected_tipo = self.data.get(self.add_prefix("id_tipo_actividad"))
+        
+        # Si estamos editando un evento existente, obtener la organización
+        if self.instance.pk:
+            tipo_actividad = self.instance.id_tipo_actividad
+            organizacion = tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion
+            self._apply_plan_restrictions(organizacion)
 
         if selected_tipo:
             self.fields["id_tipo_actividad"].queryset = TipoActividad.objects.filter(
@@ -106,6 +114,20 @@ class ActividadProgramadaForm(forms.ModelForm):
             )
         else:
             self.fields["id_tipo_actividad"].queryset = TipoActividad.objects.none()
+
+    
+    
+    def _apply_plan_restrictions(self, organizacion):
+        """Deshabilita campos basado en el plan de la organización"""
+        if organizacion.plan == 'BASICO':
+            self.fields['requiere_preregistro'].disabled = True
+            self.fields['pin_confirmacion'].disabled = True
+            self.fields['aplicar_evaluacion'].disabled = True
+            self.fields['permite_qr_invertido'].disabled = True
+        
+        elif organizacion.plan == 'PRO':
+            # PRO no permite QR invertido
+            self.fields['permite_qr_invertido'].disabled = True
 
     # ===== PASO CLAVE: Sobreescribir el método de validación general =====
     def clean(self):
@@ -123,9 +145,49 @@ class ActividadProgramadaForm(forms.ModelForm):
                     "fecha_hora_fin",
                     "La fecha de finalización no puede ser anterior a la fecha de inicio.",
                 )
-
-                # Opción B (Alternativa): Si prefieres un error global de formulario, descomenta la siguiente línea:
-                # raise ValidationError("Error cronológico: La actividad no puede terminar antes de haber iniciado.")
+                
+        # Solo validar si NO es superusuario (superusers pueden saltarse restricciones)
+        if self.user and self.user.is_superuser:
+            return cleaned_data
+        
+        tipo_actividad = cleaned_data.get('id_tipo_actividad')
+        if not tipo_actividad:
+            return cleaned_data
+        
+        # Obtener organización
+        organizacion = tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion
+        
+        # 1. Validar límite mensual SOLO para eventos nuevos
+        if self.instance.pk is None:  # Es un evento nuevo
+            fecha_inicio = cleaned_data.get('fecha_hora_inicio')
+            if fecha_inicio:
+                # Contar eventos del mes actual
+                eventos_mes = ActividadProgramada.objects.filter(
+                    id_tipo_actividad__id_linea__id_objetivo__id_unidad__id_organizacion=organizacion,
+                    fecha_hora_inicio__year=fecha_inicio.year,
+                    fecha_hora_inicio__month=fecha_inicio.month
+                ).count()
+                
+                if eventos_mes >= organizacion.limite_eventos_mes:
+                    raise ValidationError(
+                        f"Has alcanzado el límite de {organizacion.limite_eventos_mes} "
+                        f"eventos para este mes. Plan actual: {organizacion.get_plan_display()}"
+                    )
+        
+        # 2. Validar restricción de Evaluaciones
+        if cleaned_data.get('aplicar_evaluacion') and organizacion.plan == 'BASICO':
+            self.add_error('aplicar_evaluacion',
+                'Las evaluaciones solo están disponibles en planes PRO o superiores.')
+        
+        # 3. Validar restricción de Pre-registro
+        if cleaned_data.get('requiere_preregistro') and organizacion.plan == 'BASICO':
+            self.add_error('requiere_preregistro',
+                'El pre-registro solo está disponible en planes PRO o superiores.')
+        
+        # 4. Validar restricción de QR Invertido
+        if cleaned_data.get('permite_qr_invertido') and organizacion.plan != 'ENTERPRISE':
+            self.add_error('permite_qr_invertido',
+                'El Pase Digital (QR) solo está disponible en plan ENTERPRISE.')
 
         return cleaned_data
 

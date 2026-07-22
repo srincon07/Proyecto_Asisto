@@ -1,4 +1,8 @@
 import json
+from email.mime.image import MIMEImage
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+import csv
 import uuid
 from django.views import View
 from django.utils import timezone
@@ -16,6 +20,8 @@ from Eventos.models import (
 from PersonasApp.models import Persona, Discapacidad
 from EstructuraApp.models import (
     Objetivo,
+    Cargo,
+    TipoActividad,
 )
 from PersonasApp.decorators import es_miembro_grupo
 from .forms import (
@@ -40,7 +46,7 @@ def programar_actividad(request, pk=None):
     )  # Solo mostramos la opción de cargue masivo al editar una actividad ya creada
 
     if request.method == "POST":
-        form = ActividadProgramadaForm(request.POST, instance=instancia)
+        form = ActividadProgramadaForm(request.POST, instance=instancia, user=request.user)
         if form.is_valid():
             # Validar que si el evento ya tenía asistencias, no intenten cambiar Preregistro
             if instancia and instancia.asistencias.exists():
@@ -50,7 +56,7 @@ def programar_actividad(request, pk=None):
             messages.success(request, "Actividad programada correctamente.")
             return redirect('Eventos:lista_eventos')
     else:
-        form = ActividadProgramadaForm(instance=instancia)
+        form = ActividadProgramadaForm(instance=instancia, user=request.user)
 
     # Objetivos necesarios para el paso 1 del formulario
     objetivos = Objetivo.objects.all().order_by("nombre_objetivo")
@@ -386,8 +392,6 @@ class ProcesarAsistenciaView(View):
             return JsonResponse({"status": "error", "message": "Ya registró su asistencia."}, status=400)
         
         return JsonResponse({"status": "success", "message": "Asistencia registrada exitosamente."})
-        
-
 @login_required
 def interfaz_escaneo_asistencia(request, actividad_id):
     """Renderiza la pantalla de captura para el organizador de la puerta."""
@@ -459,3 +463,40 @@ def api_indicadores(request):
 def dashboard_view(request):
     eventos = ActividadProgramada.objects.all().order_by('-fecha_hora_inicio')
     return render(request, 'Eventos/dashboard.html', {'eventos': eventos})
+    
+@require_http_methods(["GET"])
+def get_plan_restrictions(request):
+    """AJAX endpoint that returns plan restrictions based on Objetivo"""
+    objetivo_id = request.GET.get('objetivo_id')
+    
+    if not objetivo_id:
+        return JsonResponse({'error': 'Missing objetivo_id'}, status=400)
+    
+    try:
+        objetivo = Objetivo.objects.select_related('id_unidad__id_organizacion').get(pk=objetivo_id)
+        organizacion = objetivo.id_unidad.id_organizacion
+        
+        # Calcular eventos creados en el mes actual para esta organización
+        ahora = timezone.now()
+        eventos_mes = ActividadProgramada.objects.filter(
+            id_tipo_actividad__id_linea__id_objetivo__id_unidad__id_organizacion=organizacion,
+            fecha_hora_inicio__year=ahora.year,
+            fecha_hora_inicio__month=ahora.month
+        ).count()
+        
+        limite_alcanzado = eventos_mes >= organizacion.limite_eventos_mes
+        
+        restrictions = {
+            'plan': organizacion.plan,
+            'allow_preregistro': organizacion.plan != 'BASICO',
+            'allow_pin': organizacion.plan != 'BASICO',
+            'allow_evaluacion': organizacion.plan != 'BASICO',
+            'allow_qr_invertido': organizacion.plan == 'ENTERPRISE',
+            'limite_alcanzado': limite_alcanzado,
+            'eventos_mes': eventos_mes,
+            'limite_maximo': organizacion.limite_eventos_mes,
+        }
+        
+        return JsonResponse(restrictions)
+    except Objetivo.DoesNotExist:
+        return JsonResponse({'error': 'Objetivo not found'}, status=404)

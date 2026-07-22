@@ -1,7 +1,12 @@
 from django.db import models
-
+from django.core.validators import MinValueValidator
 
 class Organizacion(models.Model):
+    PLAN_CHOICES = [
+        ('BASICO', 'Plan Básico - Solo eventos abiertos'),
+        ('PRO', 'Plan Pro - Pre-registro + Evaluaciones'),
+        ('ENTERPRISE', 'Plan Enterprise - Pase Digital QR + Todo'),
+    ]
     nombre_organizacion = models.CharField(max_length=255, unique=True)
     nit = models.CharField(max_length=20, unique=True)
     direccion = models.CharField(max_length=255)
@@ -9,7 +14,19 @@ class Organizacion(models.Model):
     correo_electronico = models.EmailField(unique=True)
     sitio_web = models.URLField(blank=True, null=True)
     logo = models.ImageField(upload_to="logos/", blank=True, null=True, verbose_name="Logo de la Organización")
-
+    plan = models.CharField(
+        max_length=20,
+        choices=PLAN_CHOICES,
+        default='BASICO',
+        verbose_name='Plan de suscripción'
+    )
+    
+    limite_eventos_mes = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        verbose_name='Límite de eventos por mes'
+    )
+    
     def __str__(self):
         return self.nombre_organizacion
 
