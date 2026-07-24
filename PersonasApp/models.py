@@ -68,6 +68,25 @@ class Persona(AbstractBaseUser, PermissionsMixin):
         max_length=150, blank=True, null=True, verbose_name="Empresa/Dependencia"
     )
     
+    # Data Treatment Policy Fields
+    autoriza_datos = models.BooleanField(
+        default=False,
+        verbose_name="Autoriza tratamiento de datos",
+        help_text="Indica si la persona autoriza el tratamiento de sus datos personales"
+    )
+    fecha_autoriza = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de autorización",
+        help_text="Fecha y hora en que se otorgó la autorización"
+    )
+    ip_autoriza = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name="IP de autorización",
+        help_text="Dirección IP desde la que se otorgó la autorización"
+    )
+    
     # Control de estado interno de autenticación Django
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False) # Permite el ingreso al backend administrativo

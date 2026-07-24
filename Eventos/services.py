@@ -64,10 +64,26 @@ def get_or_create_persona(request, cargo_id_default=None):
             persona.discapacidad = Discapacidad.objects.get(id=discapacidad_id)
         except Discapacidad.DoesNotExist:
             persona.discapacidad = None
+            
+    # 4. Gestionar Autorización de Datos
+    autoriza_datos = request.POST.get("autoriza_datos", "off") == "on"
+    if autoriza_datos and not persona.autoriza_datos:
+        persona.autoriza_datos = True
+        persona.fecha_autoriza = timezone.now()
+        persona.ip_autoriza = get_client_ip(request)
+    elif autoriza_datos and persona.autoriza_datos:
+        # Si ya tenía autorización, actualizamos la fecha si es necesario
+        # Opcional: podrías actualizar la fecha cada vez que se vuelve a autorizar
+        pass
+    elif not autoriza_datos:
+        persona.autoriza_datos = False
+        # Opcional: mantener la fecha e IP para auditoría incluso si se desautoriza
+        # persona.fecha_autoriza = None
+        # persona.ip_autoriza = None    
     
     persona.save()
 
-    # 4. Gestionar Cargo
+    # 5. Gestionar Cargo
     cargo_id = request.POST.get("cargo", "").strip() or cargo_id_default
     if cargo_id:
         try:
@@ -81,6 +97,15 @@ def get_or_create_persona(request, cargo_id_default=None):
             pass
 
     return persona
+
+def get_client_ip(request):
+    """Obtiene la dirección IP del cliente de manera segura"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR', '')
+    return ip
 
 def procesar_verificacion_asistente(actividad, documento):
     """
@@ -162,6 +187,7 @@ def procesar_verificacion_asistente(actividad, documento):
             "genero": persona.genero or "",
             "discapacidad": persona.discapacidad.id if persona.discapacidad else "",
             "cargos": cargos_data,
+            "autoriza_datos": persona.autoriza_datos,
         }, 200
 
     return {"status": "NUEVO_REGISTRO", "cargos": cargos_data}, 200

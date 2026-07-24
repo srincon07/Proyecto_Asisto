@@ -12,16 +12,23 @@ from .models import (
 
 @admin.register(Organizacion)
 class OrganizacionAdmin(admin.ModelAdmin):
-    list_display = ("nombre_organizacion", "mostrar_logo_thumbnail")
-    search_fields = ("nombre_organizacion",)
+    list_display = ("nombre_organizacion", "nit", "plan", "limite_eventos_mes", "correo_electronico", "mostrar_logo_thumbnail")
+    search_fields = ("nombre_organizacion", "nit", "correo_electronico")
     
     # Organizar el formulario de edición por secciones
     fieldsets = (
         ('Información General', {
-            'fields': ('nombre_organizacion', 'nit', 'direccion', 'telefono', 'correo_electronico', 'sitio_web', 'plan', 'limite_eventos_mes') # Añade aquí tus otros campos de texto
+            'fields': ('nombre_organizacion', 'nit', 'direccion', 'telefono', 'correo_electronico', 'sitio_web') # Añade aquí tus otros campos de texto
         }),
         ('Identidad Visual', {
             'fields': ('logo', 'preview_logo_form'),
+        }),
+        ('Plan y Límites', {
+            'fields': ('plan', 'limite_eventos_mes')
+        }),
+        ('Tratamiento de Datos', {
+            'fields': ('correo_tratamiento_datos', 'url_politica_datos', 'texto_consentimiento'),
+            'description': 'Configuración para el tratamiento de datos personales y consentimiento'
         }),
     )
     

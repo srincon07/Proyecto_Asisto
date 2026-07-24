@@ -23,16 +23,22 @@ class PersonaPersonalizadoAdmin(UserAdmin):
         ('Información Personal', {
             'fields': ('identificacion', 'nombres', 'apellidos', 'genero', 'telefono')
         }),
-        ('Roles y Grupos', { # Sección nueva o actualizada
-            'fields': ('groups',)
-        }),
         ('Información Institucional', {
             'fields': ('organizacion_origen', 'discapacidad')
+        }),
+        ('Tratamiento de Datos', {
+            'fields': ('autoriza_datos', 'fecha_autoriza', 'ip_autoriza'),
+            'classes': ('collapse',),
+            'description': 'Información sobre la autorización de tratamiento de datos personales'
         }),
         ('Permisos de Infraestructura (TI)', {
             'fields': ('is_active', 'is_staff',)
         }),
+        ('Roles y Grupos', { # Sección nueva o actualizada
+            'fields': ('groups',)
+        }),
     )
+    readonly_fields = ('autoriza_datos', 'fecha_autoriza', 'ip_autoriza')
 
     # 3. Metodo para mostrar los grupos en la lista (Opcional, para mejor visibilidad)
     def lista_grupos(self, obj):

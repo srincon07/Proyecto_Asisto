@@ -391,7 +391,7 @@ class ProcesarAsistenciaView(View):
         if not creado and registro.estado == "CONFIRMADO":
             return JsonResponse({"status": "error", "message": "Ya registró su asistencia."}, status=400)
         
-        return JsonResponse({"status": "success", "message": "Asistencia registrada exitosamente."})
+        return JsonResponse({"status": "success", "message": "Su participación ha sido registrada con éxito."})
 @login_required
 def interfaz_escaneo_asistencia(request, actividad_id):
     """Renderiza la pantalla de captura para el organizador de la puerta."""

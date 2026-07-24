@@ -167,6 +167,45 @@
                                     <option value="">-- Seleccione --</option>
                                 </select>
                             </div>
+
+                             <!-- DATA TREATMENT POLICY SECTION -->
+                            <div class="mb-4 p-3 bg-light rounded-3 border">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="autorizaDatos" name="autoriza_datos" required>
+                                    <label class="form-check-label fw-semibold" for="autorizaDatos">
+                                        <i class="bi bi-shield-check text-success me-2"></i>
+                                        Autorizo el tratamiento de mis datos personales
+                                    </label>
+                                </div>
+                                
+                                <!-- Dynamic consent text from organization -->
+                                <div class="mt-2 small text-muted">
+                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento %}
+                                        {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento }}
+                                    {% else %}
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Al registrarme, acepto el tratamiento de mis datos personales de acuerdo con la política de privacidad establecida.
+                                    {% endif %}
+                                    
+                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos %}
+                                        <br>
+                                        <a href="{{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos }}" 
+                                           target="_blank" 
+                                           class="text-decoration-none small">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>
+                                            Ver Política de Privacidad
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos %}
+                                        <br>
+                                        <span class="small">
+                                            <i class="bi bi-envelope me-1"></i>
+                                            Consultas: {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
                             
                             <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnRegistrarFinal">
                                 <i class="bi bi-check-circle-fill me-2"></i>Finalizar Registro
@@ -287,6 +326,11 @@
                             document.getElementById('fTel').value = data.telefono || '';
                             document.getElementById('fGenero').value = data.genero || '';
                             document.getElementById('fDiscapacidad').value = data.discapacidad || '';
+                        
+                            // Check the authorization checkbox if previously authorized
+                            if (data.autoriza_datos) {
+                                document.getElementById('autorizaDatos').checked = true;
+                            }
                         } else {
                             document.getElementById('fNom').value = '';
                             document.getElementById('fApe').value = '';
@@ -295,6 +339,7 @@
                             document.getElementById('fTel').value = '';
                             document.getElementById('fGenero').value = '';
                             document.getElementById('fDiscapacidad').value = '';
+                            document.getElementById('autorizaDatos').checked = false;
                         }
                     }
                 });
@@ -312,21 +357,31 @@
                 const apellidos = document.getElementById('fApe').value;
                 const genero = document.getElementById('fGenero').value;
                 const correo = document.getElementById('fMail').value;
-                const cargo = document.getElementById('fCargo').value; // Validar el cargo institucional
+                const cargo = document.getElementById('fCargo').value;
+                const autorizaDatos = document.getElementById('autorizaDatos').checked;
 
                 if(!nombres || !apellidos || !genero || !correo || !cargo) {
                     Swal.fire('Campos requeridos', 'Por favor complete nombres, apellidos, correo, género y cargo.', 'warning');
                     return;
                 }
+                
+                if(!autorizaDatos) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Autorización requerida',
+                        text: 'Debe aceptar el tratamiento de sus datos personales para continuar con el registro.',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#1e2b58',
+                    });
+                    return;
+                }
+
                 const formData = new FormData(document.getElementById('formAsistencia'));
                 enviarFormulario(formData);
             });
 
             
             // Función reutilizable para despachar datos por POST
-            // ... dentro del tag <script> existente
-
-            // Función mejorada para despachar datos
             function enviarFormulario(formData) {
                 const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
                 const btnValidarPin = document.getElementById('btnValidarPin');
@@ -349,7 +404,7 @@
                     if(data.status === 'success') {
                         Swal.fire({
                             icon: 'success',
-                            title: '¡Éxito!',
+                            title: 'Asistencia registrada correctamente',
                             text: data.message,
                             allowOutsideClick: false,
                             confirmButtonColor: '#1e2b58',

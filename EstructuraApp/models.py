@@ -1,5 +1,6 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, URLValidator
+from django.core.exceptions import ValidationError
 
 class Organizacion(models.Model):
     PLAN_CHOICES = [
@@ -26,6 +27,41 @@ class Organizacion(models.Model):
         validators=[MinValueValidator(1)],
         verbose_name='Límite de eventos por mes'
     )
+    
+    # Data Treatment Policy Fields
+    correo_tratamiento_datos = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name="Correo para tratamiento de datos",
+        help_text="Dirección de correo para consultas sobre tratamiento de datos personales"
+    )
+    
+    url_politica_datos = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name="URL Política de Datos",
+        help_text="Enlace a la política de privacidad y tratamiento de datos"
+    )
+    
+    texto_consentimiento = models.TextField(
+        blank=True,
+        default="Al registrarme, autorizo de manera expresa, libre e informada a [nombre_organizacion] y a su proveedor tecnológico Qdata Technologies SAS (Propietario de ASISTO), para el tratamiento de mis datos personales aquí consignados, con la finalidad de gestionar mi participación en sus eventos, control de aforo, envío de memorias y evaluaciones de satisfacción. Conozco que puedo ejercer mis derechos de acceso, rectificación y supresión a través del correo [correo_tratamiento_datos].",
+        verbose_name="Texto de Consentimiento",
+        help_text="Texto que se mostrará para solicitar el consentimiento de tratamiento de datos"
+    )
+    
+    def clean(self):
+        """Validate that if URL is provided, it's properly formatted"""
+        super().clean()
+        for url in [self.sitio_web, self.url_politica_datos]:
+            if url:
+                try:
+                    URLValidator()(url)
+                except ValidationError:
+                    field_name = 'sitio_web' if url == self.sitio_web else 'url_politica_datos'
+                    raise ValidationError({
+                        field_name: 'Please enter a valid URL format.'
+                    })
     
     def __str__(self):
         return self.nombre_organizacion
