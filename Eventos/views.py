@@ -70,7 +70,7 @@ def programar_actividad(request, pk=None):
     }
     return render(request, "Eventos/programar_actividad.html", context)
 
-@login_required
+@es_miembro_grupo('Administrador','Organizador', 'Lector-Asistencia')
 def lista_eventos(request):
     actividades = ActividadProgramada.objects.select_related(
         "id_tipo_actividad", "id_responsable"
@@ -121,7 +121,6 @@ def lista_eventos(request):
 
     return render(request, "Eventos/lista_eventos.html", {"actividades": actividades})
 
-@login_required
 @es_miembro_grupo('Administrador','Organizador')
 def eliminar_actividad(request, pk):
     actividad = get_object_or_404(ActividadProgramada, pk=pk)
@@ -151,7 +150,6 @@ def eliminar_actividad(request, pk):
 
 
 # 2. VISTA INTERNA: Llamada desde el botón del listado de eventos para ver quién asistió
-@login_required
 @es_miembro_grupo('Administrador','Organizador')
 def panel_asistentes_actividad(request, actividad_id):
     # 1. Traemos la actividad resolviendo toda la cadena de llaves foráneas hasta Organización
@@ -290,7 +288,6 @@ class VerificarAsistenteAjaxView(View):
 
 
 # 3. PROCESAMIENTO FINAL: Guarda el formulario (Registro o Confirmación con PIN)
-@method_decorator(es_miembro_grupo('Administrador', 'Organizador'), name='dispatch')
 class ProcesarAsistenciaView(View):
     def post(self, request, actividad_id):
         try:
@@ -396,7 +393,8 @@ class ProcesarAsistenciaView(View):
             return JsonResponse({"status": "error", "message": "Ya registró su asistencia."}, status=400)
         
         return JsonResponse({"status": "success", "message": "Su participación ha sido registrada con éxito."})
-@login_required
+    
+@method_decorator(es_miembro_grupo('Administrador', 'Organizador', 'Lector-Asistencia'), name='dispatch')
 def interfaz_escaneo_asistencia(request, actividad_id):
     """Renderiza la pantalla de captura para el organizador de la puerta."""
     actividad = get_object_or_404(ActividadProgramada, id=actividad_id)
@@ -455,14 +453,12 @@ class CargaMasivaView(View):
             'errores_csv': reporte.get("errores", []) if 'reporte' in locals() else None
         })
 
-@login_required
 @es_miembro_grupo('Administrador')
 def api_indicadores(request):
     actividad_id = request.GET.get('evento_id')
     data = obtener_datos_dashboard(actividad_id)
     return JsonResponse(data, safe=False)
 
-@login_required
 @es_miembro_grupo('Administrador')
 def dashboard_view(request):
     eventos = ActividadProgramada.objects.all().order_by('-fecha_hora_inicio')
