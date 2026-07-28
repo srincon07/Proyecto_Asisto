@@ -2,7 +2,7 @@ import json
 from email.mime.image import MIMEImage
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-import csv
+import logging
 import uuid
 from django.views import View
 from django.utils import timezone
@@ -20,8 +20,6 @@ from Eventos.models import (
 from PersonasApp.models import Persona, Discapacidad
 from EstructuraApp.models import (
     Objetivo,
-    Cargo,
-    TipoActividad,
 )
 from PersonasApp.decorators import es_miembro_grupo
 from .forms import (
@@ -36,6 +34,8 @@ from .services import (
     procesar_verificacion_asistente,
     procesar_validacion_asistencia_pase_digital
 )
+
+logger = logging.getLogger(__name__)
 
 @es_miembro_grupo('Administrador','Organizador')
 def programar_actividad(request, pk=None):
@@ -293,15 +293,19 @@ class VerificarAsistenteAjaxView(View):
 @method_decorator(es_miembro_grupo('Administrador', 'Organizador'), name='dispatch')
 class ProcesarAsistenciaView(View):
     def post(self, request, actividad_id):
-        self.actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
-        accion = request.POST.get("accion")
+        try:
+            self.actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
+            accion = request.POST.get("accion")
 
-        if accion == "procesar_pin":
-            return self._procesar_pin(request)
-        elif accion == "registrar_nuevo":
-            return self._procesar_registro(request)
-        
-        return JsonResponse({"status": "error", "message": "Acción inválida"}, status=400)
+            if accion == "procesar_pin":
+                return self._procesar_pin(request)
+            elif accion == "registrar_nuevo":
+                return self._procesar_registro(request)
+            
+            return JsonResponse({"status": "error", "message": "Acción inválida"}, status=400)
+        except Exception as e:
+            logger.error(f"Error en ProcesarAsistenciaView: {e}")
+            return JsonResponse({"status": "error", "message": "Error interno del servidor"}, status=500)
 
     def _procesar_pin(self, request):
         pin = request.POST.get("pin_evento", "").strip()

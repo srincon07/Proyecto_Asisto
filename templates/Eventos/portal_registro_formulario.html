@@ -251,56 +251,246 @@
             const inputAccion = document.getElementById('inputAccion');
             const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+            // Configuración de la alerta de carga
             const loadingConfig = {
                 title: 'Guardando datos...',
                 html: 'Por favor, espera un momento.',
                 allowOutsideClick: false,
+                allowEscapeKey: false,
                 didOpen: () => {
                     Swal.showLoading();
                 }
             };
 
-            // --- PASO 1: VERIFICAR IDENTIFICACIÓN ---
-            btnSiguiente.addEventListener('click', function() {
+            // --- Función mejorada para enviar formulario ---
+            function enviarFormulario(formData) {
+                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+                const btnValidarPin = document.getElementById('btnValidarPin');
+                const btnSiguiente = document.getElementById('btnSiguiente');
+                
+                // 1. Deshabilitar todos los botones para evitar múltiples clics
+                if(btnRegistrarFinal) btnRegistrarFinal.disabled = true;
+                if(btnValidarPin) btnValidarPin.disabled = true;
+                if(btnSiguiente) btnSiguiente.disabled = true;
+
+                // 2. Mostrar alerta de carga
+                Swal.fire(loadingConfig);
+
+                // 3. Crear un AbortController para timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
+                // 4. Realizar la petición fetch
+                fetch(`{% url 'Eventos:procesar_asistencia' actividad.id %}`, {
+                    method: 'POST',
+                    headers: { 
+                        'X-CSRFToken': token,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                    signal: controller.signal,
+                })
+                .then(res => {
+                    clearTimeout(timeoutId);
+                    // Verificar que la respuesta sea JSON válido
+                    const contentType = res.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Respuesta no válida del servidor');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    // 5. Ocultar la alerta de carga y manejar la respuesta
+                    Swal.close();
+                    
+                    if(data.status === 'success') {
+                        // Éxito - Recargar la página después de mostrar el mensaje
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Registro exitoso!',
+                            text: data.message || 'Su asistencia ha sido registrada correctamente.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            confirmButtonColor: '#1e2b58',
+                            confirmButtonText: 'Aceptar',
+                        }).then(() => {
+                            // Recargar la página para actualizar el estado
+                            window.location.reload(true);
+                        });
+                    } else {
+                        // Error del servidor
+                        mostrarError(data.message || 'Ocurrió un error al procesar su solicitud.');
+                        
+                        // Re-habilitar botones en caso de error
+                        habilitarBotones();
+                    }
+                })
+                .catch(error => {
+                    // 6. Manejo de errores de red o timeout
+                    clearTimeout(timeoutId);
+                    Swal.close();
+                    
+                    let mensajeError = 'Ocurrió un problema de conexión. ';
+                    if (error.name === 'AbortError') {
+                        mensajeError += 'La solicitud ha tardado demasiado. Por favor, verifique su conexión e intente nuevamente.';
+                    } else if (error.message && error.message.includes('Respuesta no válida')) {
+                        mensajeError += 'El servidor no respondió correctamente. Por favor, intente nuevamente.';
+                    } else {
+                        mensajeError += 'Intente nuevamente más tarde.';
+                    }
+                    
+                    mostrarError(mensajeError);
+                    habilitarBotones();
+                });
+            }
+
+            // --- Función para mostrar errores de forma consistente ---
+            function mostrarError(mensaje) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: mensaje,
+                    confirmButtonColor: '#1e2b58',
+                    confirmButtonText: 'Entendido',
+                });
+            }
+
+            // --- Función para habilitar botones ---
+            function habilitarBotones() {
+                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+                const btnValidarPin = document.getElementById('btnValidarPin');
+                const btnSiguiente = document.getElementById('btnSiguiente');
+                
+                if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
+                if(btnValidarPin) btnValidarPin.disabled = false;
+                if(btnSiguiente) btnSiguiente.disabled = false;
+            }
+
+            // --- Función de validación mejorada para formularios ---
+            function validarCampos() {
+                const camposRequeridos = document.querySelectorAll('#bloqueCamposRegistro [required]');
+                let valido = true;
+                let mensaje = '';
+                
+                camposRequeridos.forEach(campo => {
+                    // Para select, verificamos que tengan un valor seleccionado
+                    if (campo.tagName === 'SELECT') {
+                        if (!campo.value || campo.value === '') {
+                            valido = false;
+                            mensaje = `Por favor seleccione ${campo.labels?.[0]?.textContent || 'una opción'}.`;
+                            campo.focus();
+                            campo.style.borderColor = '#dc3545';
+                        } else {
+                            campo.style.borderColor = '';
+                        }
+                    } else if (campo.type === 'checkbox') {
+                        if (!campo.checked) {
+                            valido = false;
+                            mensaje = 'Debe aceptar el tratamiento de sus datos personales para continuar.';
+                            campo.focus();
+                        }
+                    } else {
+                        if (!campo.value || campo.value.trim() === '') {
+                            valido = false;
+                            mensaje = `Por favor complete el campo ${campo.labels?.[0]?.textContent || 'requerido'}.`;
+                            campo.focus();
+                            campo.style.borderColor = '#dc3545';
+                        } else {
+                            campo.style.borderColor = '';
+                        }
+                    }
+                });
+                
+                if (!valido && mensaje) {
+                    mostrarError(mensaje);
+                }
+                
+                return valido;
+            }
+
+            // --- PASO 1: VERIFICAR IDENTIFICACIÓN (mejorado) ---
+            btnSiguiente.addEventListener('click', function(e) {
+                // Prevenir múltiples clics
+                if (this.disabled) return;
+                
                 const docValue = fDoc.value.trim();
                 if(!docValue) {
-                    Swal.fire('Atención', 'Por favor ingrese su número de documento.', 'warning');
+                    mostrarError('Por favor ingrese su número de documento.');
+                    fDoc.focus();
+                    fDoc.style.borderColor = '#dc3545';
                     return;
                 }
+                
+                // Deshabilitar botón temporalmente
+                this.disabled = true;
+                
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Verificando...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?identificacion=${docValue}`)
-                .then(response => response.json())
+                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?identificacion=${encodeURIComponent(docValue)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la comunicación con el servidor');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.status === 'YA_CONFIRMADO') {
-                        Swal.fire('Registro Completo', data.message, 'info').then(() => location.reload());
-                    } 
-                    else if (data.status === 'SOLO_REGISTRADO') {
-                        Swal.fire('Ya Registrado', data.message, 'info').then(() => location.reload());
+                    Swal.close();
+                    // Habilitar botón nuevamente
+                    this.disabled = false;
+                    
+                    if (data.status === 'YA_CONFIRMADO' || data.status === 'SOLO_REGISTRADO') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Información',
+                            text: data.message || 'Ya se encuentra registrado en esta actividad.',
+                            confirmButtonText: 'Aceptar',
+                        }).then(() => {
+                            if (data.status === 'YA_CONFIRMADO') {
+                                window.location.reload(true);
+                            }
+                        });
                     } 
                     else if (data.status === 'SOLICITAR_PIN') {
-                        document.getElementById('txtNombrePin').innerText = data.nombres;
+                        document.getElementById('txtNombrePin').innerText = data.nombres || 'usuario';
                         inputAccion.value = 'procesar_pin';
                         bIdentificacion.style.display = 'none';
                         bPin.style.display = 'block';
+                        // Enfocar campo PIN
+                        document.getElementById('fPin').focus();
                     } 
                     else if (data.status === 'RECHAZAR_NUEVO_REGISTRO') {
-                        // Manejo del bloqueo estricto para eventos con preregistro obligatorio en curso
                         Swal.fire({
                             icon: 'error',
                             title: 'Acceso Denegado',
-                            text: 'Esta actividad requería un preregistro obligatorio. No se admiten inscripciones nuevas mientras el evento está en curso.',
+                            text: data.message || 'Esta actividad requería un preregistro obligatorio. No se admiten inscripciones nuevas mientras el evento está en curso.',
                             confirmButtonText: 'Entendido'
-                        }).then(() => location.reload());
+                        }).then(() => {
+                            window.location.reload(true);
+                        });
                     }
                     else if (data.status === 'COMPLETAR_REGISTRO' || data.status === 'NUEVO_REGISTRO') {
-                        // Flujo de inscripción autorizado (Casos válidos de Programada o En curso sin preregistro)
-                        inputAccion.value = 'registrar_nuevo';
-                        bIdentificacion.style.display = 'none';
-                        bRegistro.style.display = 'block';
-
-                        // --- POBLAR SELECT DE CARGOS DINÁMICAMENTE ---
+                        // Poblar formulario con datos existentes si los hay
+                        if(data.status === 'COMPLETAR_REGISTRO') {
+                            if(data.nombres) document.getElementById('fNom').value = data.nombres;
+                            if(data.apellidos) document.getElementById('fApe').value = data.apellidos;
+                            if(data.correo) document.getElementById('fMail').value = data.correo;
+                            if(data.organizacion_origen) document.getElementById('fOrg').value = data.organizacion_origen;
+                            if(data.telefono) document.getElementById('fTel').value = data.telefono;
+                            if(data.genero) document.getElementById('fGenero').value = data.genero;
+                            if(data.discapacidad) document.getElementById('fDiscapacidad').value = data.discapacidad;
+                            if(data.autoriza_datos) document.getElementById('autorizaDatos').checked = true;
+                        }
+                        
+                        // Poblar select de cargos
                         const selectCargo = document.getElementById('fCargo');
-                        // Limpiamos las opciones anteriores dejando solo el placeholder
                         selectCargo.innerHTML = '<option value="">-- Seleccione --</option>';
                         
                         if (data.cargos && data.cargos.length > 0) {
@@ -311,119 +501,119 @@
                                 selectCargo.appendChild(opt);
                             });
                             
-                            // Si la regla de negocio devolvió exactamente un solo cargo (como el Cargo ID 1 por defecto), lo pre-seleccionamos
                             if (data.cargos.length === 1) {
                                 selectCargo.value = data.cargos[0].id;
                             }
                         }
-                        // ---------------------------------------------
                         
-                        if(data.status === 'COMPLETAR_REGISTRO') {
-                            document.getElementById('fNom').value = data.nombres;
-                            document.getElementById('fApe').value = data.apellidos;
-                            document.getElementById('fMail').value = data.correo;
-                            document.getElementById('fOrg').value = data.organizacion_origen;
-                            document.getElementById('fTel').value = data.telefono || '';
-                            document.getElementById('fGenero').value = data.genero || '';
-                            document.getElementById('fDiscapacidad').value = data.discapacidad || '';
+                        inputAccion.value = 'registrar_nuevo';
+                        bIdentificacion.style.display = 'none';
+                        bRegistro.style.display = 'block';
                         
-                            // Check the authorization checkbox if previously authorized
-                            if (data.autoriza_datos) {
-                                document.getElementById('autorizaDatos').checked = true;
-                            }
-                        } else {
-                            document.getElementById('fNom').value = '';
-                            document.getElementById('fApe').value = '';
-                            document.getElementById('fMail').value = '';
-                            document.getElementById('fOrg').value = '';
-                            document.getElementById('fTel').value = '';
-                            document.getElementById('fGenero').value = '';
-                            document.getElementById('fDiscapacidad').value = '';
-                            document.getElementById('autorizaDatos').checked = false;
+                        // Enfocar el primer campo del formulario
+                        document.getElementById('fNom').focus();
+                    } else {
+                        mostrarError(data.message || 'Error al verificar el documento.');
+                    }
+                })
+                .catch(error => {
+                    Swal.close();
+                    this.disabled = false;
+                    mostrarError('Error de conexión. Por favor, verifique su red e intente nuevamente.');
+                    console.error('Error en verificación:', error);
+                });
+            });
+
+            // --- PASO 2: ENVIAR VALIDACIÓN DE PIN (mejorado) ---
+            btnValidarPin.addEventListener('click', function(e) {
+                if (this.disabled) return;
+                
+                const pinValue = document.getElementById('fPin').value.trim();
+                if(!pinValue || pinValue.length < 4) {
+                    mostrarError('Por favor ingrese el código PIN de 4 dígitos.');
+                    document.getElementById('fPin').focus();
+                    document.getElementById('fPin').style.borderColor = '#dc3545';
+                    return;
+                }
+                
+                const formData = new FormData(document.getElementById('formAsistencia'));
+                enviarFormulario(formData);
+            });
+
+            // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO (mejorado) ---
+            btnRegistrarFinal.addEventListener('click', function(e) {
+                if (this.disabled) return;
+                
+                // Validar campos requeridos
+                if (!validarCampos()) {
+                    return;
+                }
+                
+                // Verificar autorización de datos
+                if (!document.getElementById('autorizaDatos').checked) {
+                    mostrarError('Debe aceptar el tratamiento de sus datos personales para continuar con el registro.');
+                    document.getElementById('autorizaDatos').focus();
+                    return;
+                }
+                
+                // Validar formato de email
+                const email = document.getElementById('fMail').value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    mostrarError('Por favor ingrese un correo electrónico válido.');
+                    document.getElementById('fMail').focus();
+                    document.getElementById('fMail').style.borderColor = '#dc3545';
+                    return;
+                }
+                
+                const formData = new FormData(document.getElementById('formAsistencia'));
+                enviarFormulario(formData);
+            });
+
+            // --- Event Listeners para mejorar UX en móviles ---
+            
+            // 1. Permitir enviar con Enter en campos de texto
+            document.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Determinar qué botón debe activarse según el bloque visible
+                        if (bIdentificacion.style.display !== 'none') {
+                            btnSiguiente.click();
+                        } else if (bPin.style.display !== 'none') {
+                            btnValidarPin.click();
+                        } else if (bRegistro.style.display !== 'none') {
+                            btnRegistrarFinal.click();
                         }
                     }
                 });
             });
 
-            // --- PASO 2: ENVIAR VALIDACIÓN DE PIN ---
-            btnValidarPin.addEventListener('click', function() {
-                const formData = new FormData(document.getElementById('formAsistencia'));
-                enviarFormulario(formData);
+            // 2. Limpiar estilos de error al enfocar
+            document.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = '';
+                });
             });
 
-            // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO ---
-            btnRegistrarFinal.addEventListener('click', function() {
-                const nombres = document.getElementById('fNom').value;
-                const apellidos = document.getElementById('fApe').value;
-                const genero = document.getElementById('fGenero').value;
-                const correo = document.getElementById('fMail').value;
-                const cargo = document.getElementById('fCargo').value;
-                const autorizaDatos = document.getElementById('autorizaDatos').checked;
-
-                if(!nombres || !apellidos || !genero || !correo || !cargo) {
-                    Swal.fire('Campos requeridos', 'Por favor complete nombres, apellidos, correo, género y cargo.', 'warning');
-                    return;
-                }
-                
-                if(!autorizaDatos) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Autorización requerida',
-                        text: 'Debe aceptar el tratamiento de sus datos personales para continuar con el registro.',
-                        confirmButtonText: 'Aceptar',
-                        confirmButtonColor: '#1e2b58',
-                    });
-                    return;
-                }
-
-                const formData = new FormData(document.getElementById('formAsistencia'));
-                enviarFormulario(formData);
-            });
-
-            
-            // Función reutilizable para despachar datos por POST
-            function enviarFormulario(formData) {
-                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
-                const btnValidarPin = document.getElementById('btnValidarPin');
-                
-                // 1. Deshabilitar botones para evitar múltiples clics
-                if(btnRegistrarFinal) btnRegistrarFinal.disabled = true;
-                if(btnValidarPin) btnValidarPin.disabled = true;
-
-                // 2. Lanzar la alerta de carga (ya la tienes configurada en loadingConfig)
-                Swal.fire(loadingConfig);
-
-                fetch(`{% url 'Eventos:procesar_asistencia' actividad.id %}`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': token },
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    // 3. Ocultar el loading y manejar la respuesta
-                    if(data.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Asistencia registrada correctamente',
-                            text: data.message,
-                            allowOutsideClick: false,
-                            confirmButtonColor: '#1e2b58',
-                        }).then(() => location.reload());
-                    } else {
-                        // Re-habilitar botones en caso de error para que el usuario pueda corregir
-                        if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
-                        if(btnValidarPin) btnValidarPin.disabled = false;
-                        
-                        Swal.fire('Error', data.message, 'error');
+            // 3. Manejar el evento 'touchstart' en dispositivos táctiles
+            // (No necesario si usamos 'click', pero agregamos para compatibilidad)
+            if ('ontouchstart' in window) {
+                [btnSiguiente, btnValidarPin, btnRegistrarFinal].forEach(btn => {
+                    if (btn) {
+                        btn.addEventListener('touchstart', function(e) {
+                            // Prevenir clics duplicados en dispositivos táctiles
+                            if (this.disabled) {
+                                e.preventDefault();
+                            }
+                        });
                     }
-                })
-                .catch(error => {
-                    // Manejo de errores de red
-                    if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
-                    if(btnValidarPin) btnValidarPin.disabled = false;
-                    Swal.fire('Error', 'Ocurrió un problema de conexión. Intente nuevamente.', 'error');
                 });
             }
+
+            // 4. Manejar casos donde el usuario cierra la alerta sin recargar
+            // (Por si la página no se recarga automáticamente)
+            console.log('Portal de registro de asistencia cargado correctamente.');
         });
     </script>
 {% endblock %}
