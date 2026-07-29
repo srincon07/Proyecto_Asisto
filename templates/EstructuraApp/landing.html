@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load static %}
 
 {% block title %}
     Sistema de Gestión de Actividades Organizacionales
@@ -8,9 +9,17 @@
     <!-- Navbar Minimalista Corporativo -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <i class="bi bi-check2-square text-info me-2"></i> ASISTO
-            </a>
+            <div class="d-flex align-items-center" style="max-height: 50px;">
+                <img src="{% static 'images/LOGO ASISTO-03.png' %}" alt="asisto!"
+                        class="img-fluid"
+                        style="max-height: 40px; width: auto;"
+                        onerror="this.style.display='none'; document.getElementById('fallback-logo-small').style.display='flex';">
+                <div id="fallback-logo-small" style="display: none;">
+                    <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                        <i class="bi bi-check2-square text-info me-2"></i> ASISTO
+                    </a>
+                </div>
+            </div>
             <div class="d-flex align-items-center gap-3">
                 <a href="{% url 'password_change' %}" class="btn btn-outline-warning btn-sm fw-bold" title="Cambiar Contraseña">
                     <i class="bi bi-key-fill me-1"></i>

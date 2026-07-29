@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+
+{% load static %}
+
 <html lang="es">
 
 <head>
@@ -79,11 +82,16 @@
             class="w-full bg-slate-950/40 border border-slate-800/80 backdrop-blur-md rounded-xl py-3 px-6 flex justify-between items-center shadow-lg">
 
             <div class="flex items-center gap-2">
-                <div
-                    class="w-8 h-8 rounded-lg gold-gradient-bg flex items-center justify-center font-bold text-darkBg text-lg font-poppins">
-                    A</div>
-                <span class="text-xl font-extrabold font-poppins tracking-wider text-white hidden sm:inline">asisto<span
-                        class="text-brandGold">!</span></span>
+                <img src="{% static 'images/LOGO ASISTO-03.png' %}" alt="asisto!"
+                        class="h-8 md:h-12 w-auto object-contain drop-shadow-[0_4px_10px_rgba(255,193,7,0.15)]"
+                        onerror="this.onerror=null; this.style.display='none'; document.getElementById('fallback-logo-small').style.display='flex';">
+                <div  id="fallback-logo-small" class="hidden items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-lg gold-gradient-bg flex items-center justify-center font-bold text-darkBg text-lg font-poppins">
+                        A</div>
+                    <span class="text-xl font-extrabold font-poppins tracking-wider text-white hidden sm:inline">asisto<span
+                            class="text-brandGold">!</span></span>
+                </div>
             </div>
 
             <div>
@@ -113,7 +121,7 @@
 
                 <!-- INTEGRACIÓN OFICIAL DEL LOGOTIPO SUMINISTRADO -->
                 <div class="flex items-center gap-4 mb-8">
-                    <img src="Logo Asisto Horizontal-Photoroom.png" alt="asisto!"
+                    <img src="{% static 'images/LOGO ASISTO-03.png' %}" alt="asisto!"
                         class="h-16 md:h-20 w-auto object-contain drop-shadow-[0_4px_10px_rgba(255,193,7,0.15)]"
                         onerror="this.onerror=null; this.style.display='none'; document.getElementById('fallback-logo').style.display='flex';">
 
@@ -155,7 +163,7 @@
                     </span>
                     <span
                         class="flex items-center gap-2 bg-slate-900/60 border border-slate-700/50 px-4 py-2 rounded-full text-xs text-slate-300 font-medium">
-                        <i class="fa-solid fa-shield-halved text-brandGold"></i> Control de Quórum
+                        <i class="fa-solid fa-shield-halved text-brandGold"></i> Evaluación de percepción
                     </span>
                 </div>
             </div>
@@ -447,7 +455,158 @@
         </div>
     </div>
 
-    <!-- SECCIÓN 6: DATOS DE CONTACTO Y CIERRE -->
+    <!-- SECCIÓN 6: CONTENIDO PRINCIPAL: PLANES VS ROI -->
+    <div class="w-full max-w-[1140px] glass-panel rounded-2xl p-8 md:p-12 mb-10 relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 left-0 w-2 h-full gold-gradient-bg"></div>
+
+        <!-- ENCABEZADO DEL SLIDE -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+            <div>
+                <span
+                    class="text-brandGold font-poppins text-xs lg:text-sm font-extrabold uppercase tracking-widest block mb-1">
+                    Análisis Financiero y de Viabilidad
+                </span>
+                <h1 class="text-3xl lg:text-4xl font-extrabold font-poppins text-white">
+                    Inversión Estratégica y <span class="text-brandGold text-glow">Retorno de Inversión</span>
+                </h1>
+            </div>
+        </div>
+    
+        <!-- CONTENIDO PRINCIPAL: PLANES VS ROI -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch my-auto">
+        
+            <!-- COLUMNA IZQUIERDA: TARJETAS DE INVERSIÓN (7/12) -->
+            <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+        
+                <!-- Plan Básico (Para Eventos Abiertos) -->
+                <div
+                    class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col justify-between transition-all hover:border-slate-700">
+                    <div>
+                        <span class="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Plan Básico</span>
+                        <h3 class="text-xl font-bold text-white mb-4">Para Eventos Abiertos</h3>
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-white">$60 USD/mes</span>
+                            <span class="text-xs text-slate-400 block mt-1">Características incluidas: Registro de asistencia abierta mediante código QR estándar. Base de datos de
+                            asistentes y descarga de reportes en Excel.</span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Público objetivo: Pequeñas empresas, áreas de recursos humanos locales, organizadores de reuniones recurrentes
+                            sencillas.
+                        </p>
+                    </div>
+                    <div class="border-t border-slate-800/80 pt-4 mt-6">
+                        <span class="text-[11px] text-slate-500 font-medium block">
+                            <i class="fa-solid fa-circle-check text-slate-600 mr-1.5"></i> Funcionalidades Estándar
+                        </span>
+                    </div>
+                </div>
+        
+                <!-- Plan Pro (Para Eventos con Preinscripción) -->
+                <div
+                    class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 flex flex-col justify-between transition-all hover:border-slate-700 relative">
+                    <!-- <span
+                        class="absolute -top-3 left-4 bg-brandNavy border border-brandGold/30 text-brandGold text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-full tracking-wider">Ahorre
+                        20%</span>-->
+                    <div>
+                        <span class="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Plan Pro</span>
+                        <h3 class="text-xl font-bold text-white mb-4">Para Eventos con Preinscripción</h3>
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-brandGold">$150 USD/mes</span>
+                            <span class="text-xs text-slate-400 block mt-1">Características incluidas: Todo lo del Plan Básico + módulo de preinscripción (envío de enlaces previos) y módulo de encuestas para evaluar la actividad inmediatamente después del registro.</span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Público objetivo: Universidades (Bienestar Universitario), centros de capacitación, seminarios entre otros.
+                        </p>
+                    </div>
+                    <div class="border-t border-slate-800/80 pt-4 mt-6">
+                        <span class="text-[11px] text-slate-400 font-medium block">
+                            <i class="fa-solid fa-circle-check text-brandGold/70 mr-1.5"></i> Encuestas de percepción
+                        </span>
+                    </div>
+                </div>
+        
+                <!-- Plan Premium / Enterprise (Confirmación In-Situ y Control de Fraude) -->
+                <div
+                    class="bg-slate-950/80 border-2 border-brandGold rounded-2xl p-6 flex flex-col justify-between relative shadow-[0_0_30px_rgba(255,193,7,0.1)] hover:scale-[1.02] transition-transform">
+                    <span
+                        class="absolute -top-3.5 left-4 bg-brandGold text-slate-950 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-widest shadow-md">Mejor
+                        ROI</span>
+                    <div>
+                        <span class="text-brandGold text-xs font-bold uppercase tracking-wider block mb-2">Plan Premium / Enterprise</span>
+                        <h3 class="text-xl font-bold text-white mb-4">Full Ecosistema</h3>
+                        <div class="mb-4">
+                            <span class="text-3xl font-black text-white">$250 USD/mes</span>
+                            <span class="text-xs text-brandGold block mt-1 font-semibold">Características incluidas: Todo lo del Plan Pro + Acreditación Express: Validación in-situ por pase digital QR en menos de 3 segundos por asistente.</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Público objetivo: Congresos masivos, ferias internacionales, multinacionales o instituciones con estrictas auditorías
+                            de asistencia.
+                        </p>
+                    </div>
+                    <div class="border-t border-brandGold/30 pt-4 mt-6">
+                        <span class="text-xs text-white font-bold block mb-1">
+                            <i class="fa-solid fa-star text-brandGold mr-1.5"></i> Todas las Funcionalidades
+                        </span>
+                        <span class="text-[10px] text-slate-400 block">Incluye módulo de evaluación y acreditación express.</span>
+                    </div>
+                </div>
+        
+            </div>
+        
+            <!-- COLUMNA DERECHA: SECCIÓN EXPLICATIVA DE ROI (4/12) -->
+            <div
+                class="lg:col-span-4 flex flex-col justify-between bg-brandNavy/20 border border-brandGold/15 rounded-2xl p-6 lg:p-8">
+                <div>
+                    <h4
+                        class="text-brandGold font-poppins text-sm font-extrabold uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-white"></i> ¿Por qué asisto se paga solo?
+                    </h4>
+        
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div
+                                class="w-6 h-6 rounded-full bg-brandGold/10 flex items-center justify-center text-brandGold text-xs shrink-0 mt-0.5">
+                                ✓</div>
+                            <p class="text-xs text-slate-300">
+                                <strong class="text-white">Reducción del 95% de colas:</strong> Evita demoras que representan
+                                horas de trabajo perdidas para sus ejecutivos de alto nivel.
+                            </p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div
+                                class="w-6 h-6 rounded-full bg-brandGold/10 flex items-center justify-center text-brandGold text-xs shrink-0 mt-0.5">
+                                ✓</div>
+                            <p class="text-xs text-slate-300">
+                                <strong class="text-white">Automatización de Reportes:</strong> Ahorra hasta 3 días hábiles de
+                                transcripción manual de datos y planillas físicas por evento.
+                            </p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div
+                                class="w-6 h-6 rounded-full bg-brandGold/10 flex items-center justify-center text-brandGold text-xs shrink-0 mt-0.5">
+                                ✓</div>
+                            <p class="text-xs text-slate-300">
+                                <strong class="text-white">Módulo de Evaluación Activo:</strong> Mida al instante el retorno
+                                cualitativo (satisfacción) para justificar presupuestos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Caja de Comparativa Rápida de Ahorros -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-6 text-center">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block mb-1">Costo vs Beneficio
+                        Estimado</span>
+                    <span class="text-2xl font-black text-green-400">+ 300% ROI</span>
+                    <span class="text-[10px] text-slate-500 block mt-1">Ahorro en papelería, logística y tiempos de personal
+                        directivo</span>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+
+    <!-- SECCIÓN 7: DATOS DE CONTACTO Y CIERRE -->
     <div
         class="w-full max-w-[1140px] glass-panel rounded-2xl p-8 md:p-14 text-center relative overflow-hidden shadow-2xl">
         <div class="absolute top-0 left-0 w-2 h-full gold-gradient-bg"></div>
@@ -519,7 +678,7 @@
 
         <p class="text-slate-500 text-xs mt-12 mb-0 border-t border-slate-900 pt-6">
             © 2026 Qdata Technologies. Todos los derechos reservados. asisto! es una marca registrada de control
-            automatizado de quórum.
+            automatizado de eventos.
         </p>
     </div>
 
