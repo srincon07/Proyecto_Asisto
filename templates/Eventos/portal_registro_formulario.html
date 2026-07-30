@@ -1,295 +1,312 @@
 {% extends "layout.html" %}
 {% block title %}
-    Registro de Asistencia - {{ actividad.nombre_evento }}
+Registro de Asistencia - {{ actividad.nombre_evento }}
 {% endblock %}
 
 
 {% block content %}
-    <header class="portal-header shadow-sm">
-        <div class="portal-tagline">
-            <i class="bi bi-award-fill me-1"></i> {{ actividad.id_tipo_actividad.nombre_tipo_actividad|upper|default:"ACTIVIDAD PROGRAMADA" }}
-        </div>
-        <h1 class="portal-main-title">Registro de Asistencia</h1>
-        <p class="portal-sub-title">{{ actividad.nombre_evento }}</p>
-        
-        <div class="info-grid">
-            <div class="info-card-item">
-                <i class="bi bi-person-badge-fill"></i>
-                <div class="info-card-text">
-                    <span class="info-card-label">Responsable</span>
-                    <span class="info-card-value">{{ actividad.id_responsable|default:"Por asignar" }}</span>
-                </div>
-            </div>
-            <div class="info-card-item">
-                <i class="bi bi-calendar3"></i>
-                <div class="info-card-text">
-                    <span class="info-card-label">Fecha del Evento</span>
-                    <span class="info-card-value">{{ actividad.fecha_hora_inicio|date:"d / m / Y" }}</span>
-                </div>
-            </div>
-            <div class="info-card-item">
-                <i class="bi bi-clock-history"></i>
-                <div class="info-card-text">
-                    <span class="info-card-label">Horario</span>
-                    <span class="info-card-value">{{ actividad.fecha_hora_inicio|time:"h:i A" }} a {{ actividad.fecha_hora_fin|time:"h:i A" }}</span>
-                </div>
-            </div>
-            <div class="info-card-item">
-                <i class="bi bi-geo-alt"></i>
-                <div class="info-card-text">
-                    <span class="info-card-label">Lugar</span>
-                    <span class="info-card-value">{{ actividad.lugar_desarrollo|default:"Por asignar" }}</span>
-                </div>
+<header class="portal-header shadow-sm">
+    <div class="portal-tagline">
+        <i class="bi bi-award-fill me-1"></i> {{ actividad.id_tipo_actividad.nombre_tipo_actividad|upper|default:"ACTIVIDAD PROGRAMADA" }}
+    </div>
+    <h1 class="portal-main-title">Registro de Asistencia</h1>
+    <p class="portal-sub-title">{{ actividad.nombre_evento }}</p>
+
+    <div class="info-grid">
+        <div class="info-card-item">
+            <i class="bi bi-person-badge-fill"></i>
+            <div class="info-card-text">
+                <span class="info-card-label">Responsable</span>
+                <span class="info-card-value">{{ actividad.id_responsable|default:"Por asignar" }}</span>
             </div>
         </div>
-    </header>
-
-    <div class="container mb-5 overlap-container">
-        <div class="row justify-content-center">
-            <div class="col-md-7 col-lg-6">
-
-                {% if enlace_activo %}
-
-                <!-- Card Central de Flujo -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" id="mainCard">
-                    <h4 class="fw-bold text-center text-dark mb-2">
-                        {% if modo_formulario == "PREREGISTRO" %}
-                            Preregistro al Evento
-                        {% elif modo_formulario == "AUTO_CONFIRMACION" %}
-                            Confirmar mi Asistencia
-                        {% else %}
-                            Registro de Asistencia
-                        {% endif %}
-                    </h4>
-                    
-                    {% if modo_formulario == "AUTO_CONFIRMACION" %}
-                        <div class="alert alert-info py-2 text-center small rounded-3 mb-4">
-                            <i class="bi bi-info-circle-fill me-2"></i> 
-                            Ya te encuentras inscrito. Introduce tu identificación para confirmar tu ingreso al auditorio.
-                        </div>
-                    {% else %}
-                        <p class="text-muted small text-center mb-4">Por favor complete los datos para el registro en la actividad.</p>
-                    {% endif %}
-                    <form id="formAsistencia">
-                        {% csrf_token %}
-                        <!-- Campo Oculto para controlar la acción interna -->
-                        <input type="hidden" name="accion" id="inputAccion" value="registro_inicial">
-
-                        <!-- PASO 1: Ingreso de Identificación (Siempre Visible al inicio) -->
-                        <div id="bloqueIdentificacion">
-                            <h5 class="fw-bold text-secondary mb-3 text-center">Ingrese su Identificación</h5>
-                            <div class="form-floating mb-3">
-                                <input type="text" name="identificacion" class="form-control" id="fDoc" placeholder="ID" required>
-                                <label for="fDoc"><i class="bi bi-card-text me-2"></i>Documento de Identidad</label>
-                            </div>
-                            <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnSiguiente">
-                                Siguiente <i class="bi bi-arrow-right-short"></i>
-                            </button>
-                        </div>
-
-                        <!-- CONDICIONAL A: Solicitar PIN en vivo (Oculto) -->
-                        <div id="bloquePin" style="display: none;">
-                            <h5 class="fw-bold text-warning mb-2 text-center"><i class="bi bi-shield-lock-fill me-2"></i>Confirmar Presencia</h5>
-                            <p class="text-muted small text-center mb-4">Hola <span id="txtNombrePin" class="fw-bold text-dark"></span>, introduce el PIN de verificación proyectado en la sala.</p>
-                            <div class="form-floating mb-4">
-                                <input type="text" name="pin_evento" class="form-control text-center fs-3 fw-bold" id="fPin" placeholder="0000" maxlength="6" autocomplete="off">
-                                <label for="fPin">Código PIN</label>
-                            </div>
-                            <button type="button" class="btn btn-warning btn-lg w-100 rounded-3 shadow fw-bold text-dark" id="btnValidarPin">
-                                <i class="bi bi-patch-check-fill me-2"></i>Validar Presencia
-                            </button>
-                        </div>
-
-                        <!-- CONDICIONAL B: Completar Datos del Perfil (Oculto) -->
-                        <div id="bloqueCamposRegistro" style="display: none;">
-                            <h5 class="fw-bold text-secondary mb-3 text-center">Complete su Perfil</h5>
-                            
-                            <!-- Nombres -->
-                            <div class="form-floating mb-3">
-                                <input type="text" name="nombres" class="form-control" id="fNom" placeholder="Nombres" required>
-                                <label for="fNom"><i class="bi bi-person me-2"></i>Nombre(s)</label>
-                            </div>
-                            
-                            <!-- Apellidos -->
-                            <div class="form-floating mb-3">
-                                <input type="text" name="apellidos" class="form-control" id="fApe" placeholder="Apellidos" required>
-                                <label for="fApe"><i class="bi bi-person-bounding-box me-2"></i>Apellido(s)</label>
-                            </div>
-                            
-                            <!-- Correo -->
-                            <div class="form-floating mb-3">
-                                <input type="email" name="correo" class="form-control" id="fMail" placeholder="Correo" required>
-                                <label for="fMail"><i class="bi bi-envelope me-2"></i>Correo Electrónico</label>
-                            </div>
-                            
-                            <!-- Teléfono -->
-                            <div class="form-floating mb-3">
-                                <input type="tel" name="telefono" class="form-control" id="fTel" placeholder="Teléfono">
-                                <label for="fTel"><i class="bi bi-telephone me-2"></i>Teléfono</label>
-                            </div>
-                            
-                            <!-- Empresa/Dependencia -->
-                            <div class="form-floating mb-3">
-                                <input type="text" name="organizacion_o_dependencia" class="form-control" id="fOrg" placeholder="Empresa/Dependencia">
-                                <label for="fOrg"><i class="bi bi-building me-2"></i>Empresa o Dependencia</label>
-                            </div>
-                            
-                            <!-- Discapacidad -->
-                            <div class="mb-3">
-                                <label for="fDiscapacidad" class="form-label fw-semibold"><i class="bi bi-heart-pulse me-2"></i>Discapacidad</label>
-                                <select name="discapacidad" id="fDiscapacidad" class="form-select">
-                                    <option value="">-- Ninguna --</option>
-                                    {% for d in discapacidades %}
-                                    <option value="{{ d.id }}">{{ d.nombre_discapacidad }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-
-
-                            <!-- Género -->
-                            <div class="mb-3">
-                                <label for="fGenero" class="form-label fw-semibold"><i class="bi bi-person-circle me-2"></i>Género</label>
-                                <select name="genero" id="fGenero" class="form-select" required>
-
-                                    <option value="">-- Seleccione --</option>
-                                    {% for g in generos %}
-                                    <option value="{{ g }}">{{ g }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="fCargo" class="form-label fw-semibold">
-                                    <i class="bi bi-briefcase me-2"></i>Cargo Institucional
-                                </label>
-                                <select name="cargo" id="fCargo" class="form-select" required>
-                                    <option value="">-- Seleccione --</option>
-                                </select>
-                            </div>
-
-                             <!-- DATA TREATMENT POLICY SECTION -->
-                            <div class="mb-4 p-3 bg-light rounded-3 border">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="autorizaDatos" name="autoriza_datos" required>
-                                    <label class="form-check-label fw-semibold" for="autorizaDatos">
-                                        <i class="bi bi-shield-check text-success me-2"></i>
-                                        Autorizo el tratamiento de mis datos personales
-                                    </label>
-                                </div>
-                                
-                                <!-- Dynamic consent text from organization -->
-                                <div class="mt-2 small text-muted">
-                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento %}
-                                        {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento }}
-                                    {% else %}
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        Al registrarme, acepto el tratamiento de mis datos personales de acuerdo con la política de privacidad establecida.
-                                    {% endif %}
-                                    
-                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos %}
-                                        <br>
-                                        <a href="{{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos }}" 
-                                           target="_blank" 
-                                           class="text-decoration-none small">
-                                            <i class="bi bi-box-arrow-up-right me-1"></i>
-                                            Ver Política de Privacidad
-                                        </a>
-                                    {% endif %}
-                                    
-                                    {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos %}
-                                        <br>
-                                        <span class="small">
-                                            <i class="bi bi-envelope me-1"></i>
-                                            Consultas: {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos }}
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold" id="btnRegistrarFinal">
-                                <i class="bi bi-check-circle-fill me-2"></i>Finalizar Registro
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
-
-                {% else %}
-
-                <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
-                        <i class="bi bi-exclamation-octagon-fill text-danger display-1 mb-3"></i>
-                        <h4 class="fw-bold text-dark mb-2">Acceso No Disponible</h4>
-                        <p class="text-muted small">
-                            Lo sentimos, el enlace de autoregistro para esta actividad no se encuentra activo o el tiempo límite de tolerancia para confirmar asistencia ya ha expirado.
-                        </p>
-                        <hr class="text-muted my-3">
-                        <p class="text-secondary font-monospace small m-0">Código de Control: TIMEOUT_OR_EXPIRED</p>
-                    </div>
-
-                {% endif %}
-
+        <div class="info-card-item">
+            <i class="bi bi-calendar3"></i>
+            <div class="info-card-text">
+                <span class="info-card-label">Fecha del Evento</span>
+                <span class="info-card-value">{{ actividad.fecha_hora_inicio|date:"d / m / Y" }}</span>
+            </div>
+        </div>
+        <div class="info-card-item">
+            <i class="bi bi-clock-history"></i>
+            <div class="info-card-text">
+                <span class="info-card-label">Horario</span>
+                <span class="info-card-value">{{ actividad.fecha_hora_inicio|time:"h:i A" }} a {{ actividad.fecha_hora_fin|time:"h:i A" }}</span>
+            </div>
+        </div>
+        <div class="info-card-item">
+            <i class="bi bi-geo-alt"></i>
+            <div class="info-card-text">
+                <span class="info-card-label">Lugar</span>
+                <span class="info-card-value">{{ actividad.lugar_desarrollo|default:"Por asignar" }}</span>
             </div>
         </div>
     </div>
+</header>
+
+<div class="container mb-5 overlap-container">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            {% if enlace_activo %}
+
+            <!-- Card Central de Flujo -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" id="mainCard">
+                <h4 class="fw-bold text-center text-dark mb-2">
+                    {% if modo_formulario == "PREREGISTRO" %}
+                    Preregistro al Evento
+                    {% elif modo_formulario == "AUTO_CONFIRMACION" %}
+                    Confirmar mi Asistencia
+                    {% else %}
+                    Registro de Asistencia
+                    {% endif %}
+                </h4>
+
+                {% if modo_formulario == "AUTO_CONFIRMACION" %}
+                <div class="alert alert-info py-2 text-center small rounded-3 mb-4">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Ya te encuentras inscrito. Introduce tu identificación para confirmar tu ingreso al auditorio.
+                </div>
+                {% else %}
+                <p class="text-muted small text-center mb-4">Por favor complete los datos para el registro en la
+                    actividad.</p>
+                {% endif %}
+                <form id="formAsistencia">
+                    {% csrf_token %}
+                    <!-- Campo Oculto para controlar la acción interna -->
+                    <input type="hidden" name="accion" id="inputAccion" value="registro_inicial">
+
+                    <!-- PASO 1: Ingreso de Identificación (Siempre Visible al inicio) -->
+                    <div id="bloqueIdentificacion">
+                        <h5 class="fw-bold text-secondary mb-3 text-center">Ingrese su Identificación</h5>
+                        <div class="form-floating mb-3">
+                            <input type="text" name="identificacion" class="form-control" id="fDoc" placeholder="ID"
+                                required>
+                            <label for="fDoc"><i class="bi bi-card-text me-2"></i>Documento de Identidad</label>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold"
+                            id="btnSiguiente">
+                            Siguiente <i class="bi bi-arrow-right-short"></i>
+                        </button>
+                    </div>
+
+                    <!-- CONDICIONAL A: Solicitar PIN en vivo (Oculto) -->
+                    <div id="bloquePin" style="display: none;">
+                        <h5 class="fw-bold text-warning mb-2 text-center"><i
+                                class="bi bi-shield-lock-fill me-2"></i>Confirmar Presencia</h5>
+                        <p class="text-muted small text-center mb-4">Hola <span id="txtNombrePin"
+                                class="fw-bold text-dark"></span>, introduce el PIN de verificación proyectado en la
+                            sala.</p>
+                        <div class="form-floating mb-4">
+                            <input type="text" name="pin_evento" class="form-control text-center fs-3 fw-bold" id="fPin"
+                                placeholder="0000" maxlength="6" autocomplete="off">
+                            <label for="fPin">Código PIN</label>
+                        </div>
+                        <button type="button" class="btn btn-warning btn-lg w-100 rounded-3 shadow fw-bold text-dark"
+                            id="btnValidarPin">
+                            <i class="bi bi-patch-check-fill me-2"></i>Validar Presencia
+                        </button>
+                    </div>
+
+                    <!-- CONDICIONAL B: Completar Datos del Perfil (Oculto) -->
+                    <div id="bloqueCamposRegistro" style="display: none;">
+                        <h5 class="fw-bold text-secondary mb-3 text-center">Complete su Perfil</h5>
+
+                        <!-- Nombres -->
+                        <div class="form-floating mb-3">
+                            <input type="text" name="nombres" class="form-control" id="fNom" placeholder="Nombres"
+                                required>
+                            <label for="fNom"><i class="bi bi-person me-2"></i>Nombre(s)</label>
+                        </div>
+
+                        <!-- Apellidos -->
+                        <div class="form-floating mb-3">
+                            <input type="text" name="apellidos" class="form-control" id="fApe" placeholder="Apellidos"
+                                required>
+                            <label for="fApe"><i class="bi bi-person-bounding-box me-2"></i>Apellido(s)</label>
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="form-floating mb-3">
+                            <input type="email" name="correo" class="form-control" id="fMail" placeholder="Correo"
+                                required>
+                            <label for="fMail"><i class="bi bi-envelope me-2"></i>Correo Electrónico</label>
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="form-floating mb-3">
+                            <input type="tel" name="telefono" class="form-control" id="fTel" placeholder="Teléfono">
+                            <label for="fTel"><i class="bi bi-telephone me-2"></i>Teléfono</label>
+                        </div>
+
+                        <!-- Empresa/Dependencia -->
+                        <div class="form-floating mb-3">
+                            <input type="text" name="organizacion_o_dependencia" class="form-control" id="fOrg"
+                                placeholder="Empresa/Dependencia">
+                            <label for="fOrg"><i class="bi bi-building me-2"></i>Empresa o Dependencia</label>
+                        </div>
+
+                        <!-- Discapacidad -->
+                        <div class="mb-3">
+                            <label for="fDiscapacidad" class="form-label fw-semibold"><i
+                                    class="bi bi-heart-pulse me-2"></i>Discapacidad</label>
+                            <select name="discapacidad" id="fDiscapacidad" class="form-select">
+                                <option value="">-- Ninguna --</option>
+                                {% for d in discapacidades %}
+                                <option value="{{ d.id }}">{{ d.nombre_discapacidad }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+
+                        <!-- Género -->
+                        <div class="mb-3">
+                            <label for="fGenero" class="form-label fw-semibold"><i
+                                    class="bi bi-person-circle me-2"></i>Género</label>
+                            <select name="genero" id="fGenero" class="form-select" required>
+
+                                <option value="">-- Seleccione --</option>
+                                {% for g in generos %}
+                                <option value="{{ g }}">{{ g }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fCargo" class="form-label fw-semibold">
+                                <i class="bi bi-briefcase me-2"></i>Cargo Institucional
+                            </label>
+                            <select name="cargo" id="fCargo" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                        </div>
+
+                        <!-- DATA TREATMENT POLICY SECTION -->
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="autorizaDatos" name="autoriza_datos"
+                                    required>
+                                <label class="form-check-label fw-semibold" for="autorizaDatos">
+                                    <i class="bi bi-shield-check text-success me-2"></i>
+                                    Autorizo el tratamiento de mis datos personales
+                                </label>
+                            </div>
+
+                            <!-- Dynamic consent text from organization -->
+                            <div class="mt-2 small text-muted">
+                                {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento %}
+                                    {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.texto_consentimiento_formateado }}
+                                {% else %}
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Al registrarme, acepto el tratamiento de mis datos personales de acuerdo con la política
+                                    de privacidad establecida.
+                                {% endif %}
+
+                                {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos %}
+                                <br>
+                                <a href="{{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.url_politica_datos }}"
+                                    target="_blank" class="text-decoration-none small">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>
+                                    Ver Política de Privacidad
+                                </a>
+                                {% endif %}
+
+                                {% if actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos %}
+                                <br>
+                                <span class="small">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    Consultas: {{ actividad.id_tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion.correo_tratamiento_datos }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold"
+                            id="btnRegistrarFinal">
+                            <i class="bi bi-check-circle-fill me-2"></i>Finalizar Registro
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            {% else %}
+
+            <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
+                <i class="bi bi-exclamation-octagon-fill text-danger display-1 mb-3"></i>
+                <h4 class="fw-bold text-dark mb-2">Acceso No Disponible</h4>
+                <p class="text-muted small">
+                    Lo sentimos, el enlace de autoregistro para esta actividad no se encuentra activo o el tiempo límite
+                    de tolerancia para confirmar asistencia ya ha expirado.
+                </p>
+                <hr class="text-muted my-3">
+                <p class="text-secondary font-monospace small m-0">Código de Control: TIMEOUT_OR_EXPIRED</p>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Lógica de Control de Flujo con Vanilla JS -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            
-            const btnSiguiente = document.getElementById('btnSiguiente');
-            const btnValidarPin = document.getElementById('btnValidarPin');
+<!-- Lógica de Control de Flujo con Vanilla JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const btnSiguiente = document.getElementById('btnSiguiente');
+        const btnValidarPin = document.getElementById('btnValidarPin');
+        const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+
+        const bIdentificacion = document.getElementById('bloqueIdentificacion');
+        const bPin = document.getElementById('bloquePin');
+        const bRegistro = document.getElementById('bloqueCamposRegistro');
+
+        const fDoc = document.getElementById('fDoc');
+        const inputAccion = document.getElementById('inputAccion');
+        const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Configuración de la alerta de carga
+        const loadingConfig = {
+            title: 'Guardando datos...',
+            html: 'Por favor, espera un momento.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        };
+
+        // --- Función mejorada para enviar formulario ---
+        function enviarFormulario(formData) {
             const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
-            
-            const bIdentificacion = document.getElementById('bloqueIdentificacion');
-            const bPin = document.getElementById('bloquePin');
-            const bRegistro = document.getElementById('bloqueCamposRegistro');
-            
-            const fDoc = document.getElementById('fDoc');
-            const inputAccion = document.getElementById('inputAccion');
-            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const btnValidarPin = document.getElementById('btnValidarPin');
+            const btnSiguiente = document.getElementById('btnSiguiente');
 
-            // Configuración de la alerta de carga
-            const loadingConfig = {
-                title: 'Guardando datos...',
-                html: 'Por favor, espera un momento.',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            };
+            // 1. Deshabilitar todos los botones para evitar múltiples clics
+            if (btnRegistrarFinal) btnRegistrarFinal.disabled = true;
+            if (btnValidarPin) btnValidarPin.disabled = true;
+            if (btnSiguiente) btnSiguiente.disabled = true;
 
-            // --- Función mejorada para enviar formulario ---
-            function enviarFormulario(formData) {
-                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
-                const btnValidarPin = document.getElementById('btnValidarPin');
-                const btnSiguiente = document.getElementById('btnSiguiente');
-                
-                // 1. Deshabilitar todos los botones para evitar múltiples clics
-                if(btnRegistrarFinal) btnRegistrarFinal.disabled = true;
-                if(btnValidarPin) btnValidarPin.disabled = true;
-                if(btnSiguiente) btnSiguiente.disabled = true;
+            // 2. Mostrar alerta de carga
+            Swal.fire(loadingConfig);
 
-                // 2. Mostrar alerta de carga
-                Swal.fire(loadingConfig);
+            // 3. Crear un AbortController para timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
 
-                // 3. Crear un AbortController para timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
-                // 4. Realizar la petición fetch
-                fetch(`{% url 'Eventos:procesar_asistencia' actividad.id %}`, {
-                    method: 'POST',
-                    headers: { 
-                        'X-CSRFToken': token,
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                    signal: controller.signal,
-                })
+            // 4. Realizar la petición fetch
+            fetch(`{% url 'Eventos:procesar_asistencia' actividad.id %}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': token,
+                    'Accept': 'application/json',
+                },
+                body: formData,
+                signal: controller.signal,
+            })
                 .then(res => {
                     clearTimeout(timeoutId);
                     // Verificar que la respuesta sea JSON válido
@@ -302,8 +319,8 @@
                 .then(data => {
                     // 5. Ocultar la alerta de carga y manejar la respuesta
                     Swal.close();
-                    
-                    if(data.status === 'success') {
+
+                    if (data.status === 'success') {
                         // Éxito - Recargar la página después de mostrar el mensaje
                         Swal.fire({
                             icon: 'success',
@@ -320,7 +337,7 @@
                     } else {
                         // Error del servidor
                         mostrarError(data.message || 'Ocurrió un error al procesar su solicitud.');
-                        
+
                         // Re-habilitar botones en caso de error
                         habilitarBotones();
                     }
@@ -329,7 +346,7 @@
                     // 6. Manejo de errores de red o timeout
                     clearTimeout(timeoutId);
                     Swal.close();
-                    
+
                     let mensajeError = 'Ocurrió un problema de conexión. ';
                     if (error.name === 'AbortError') {
                         mensajeError += 'La solicitud ha tardado demasiado. Por favor, verifique su conexión e intente nuevamente.';
@@ -338,103 +355,103 @@
                     } else {
                         mensajeError += 'Intente nuevamente más tarde.';
                     }
-                    
+
                     mostrarError(mensajeError);
                     habilitarBotones();
                 });
-            }
+        }
 
-            // --- Función para mostrar errores de forma consistente ---
-            function mostrarError(mensaje) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: mensaje,
-                    confirmButtonColor: '#1e2b58',
-                    confirmButtonText: 'Entendido',
-                });
-            }
+        // --- Función para mostrar errores de forma consistente ---
+        function mostrarError(mensaje) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje,
+                confirmButtonColor: '#1e2b58',
+                confirmButtonText: 'Entendido',
+            });
+        }
 
-            // --- Función para habilitar botones ---
-            function habilitarBotones() {
-                const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
-                const btnValidarPin = document.getElementById('btnValidarPin');
-                const btnSiguiente = document.getElementById('btnSiguiente');
-                
-                if(btnRegistrarFinal) btnRegistrarFinal.disabled = false;
-                if(btnValidarPin) btnValidarPin.disabled = false;
-                if(btnSiguiente) btnSiguiente.disabled = false;
-            }
+        // --- Función para habilitar botones ---
+        function habilitarBotones() {
+            const btnRegistrarFinal = document.getElementById('btnRegistrarFinal');
+            const btnValidarPin = document.getElementById('btnValidarPin');
+            const btnSiguiente = document.getElementById('btnSiguiente');
 
-            // --- Función de validación mejorada para formularios ---
-            function validarCampos() {
-                const camposRequeridos = document.querySelectorAll('#bloqueCamposRegistro [required]');
-                let valido = true;
-                let mensaje = '';
-                
-                camposRequeridos.forEach(campo => {
-                    // Para select, verificamos que tengan un valor seleccionado
-                    if (campo.tagName === 'SELECT') {
-                        if (!campo.value || campo.value === '') {
-                            valido = false;
-                            mensaje = `Por favor seleccione ${campo.labels?.[0]?.textContent || 'una opción'}.`;
-                            campo.focus();
-                            campo.style.borderColor = '#dc3545';
-                        } else {
-                            campo.style.borderColor = '';
-                        }
-                    } else if (campo.type === 'checkbox') {
-                        if (!campo.checked) {
-                            valido = false;
-                            mensaje = 'Debe aceptar el tratamiento de sus datos personales para continuar.';
-                            campo.focus();
-                        }
+            if (btnRegistrarFinal) btnRegistrarFinal.disabled = false;
+            if (btnValidarPin) btnValidarPin.disabled = false;
+            if (btnSiguiente) btnSiguiente.disabled = false;
+        }
+
+        // --- Función de validación mejorada para formularios ---
+        function validarCampos() {
+            const camposRequeridos = document.querySelectorAll('#bloqueCamposRegistro [required]');
+            let valido = true;
+            let mensaje = '';
+
+            camposRequeridos.forEach(campo => {
+                // Para select, verificamos que tengan un valor seleccionado
+                if (campo.tagName === 'SELECT') {
+                    if (!campo.value || campo.value === '') {
+                        valido = false;
+                        mensaje = `Por favor seleccione ${campo.labels?.[0]?.textContent || 'una opción'}.`;
+                        campo.focus();
+                        campo.style.borderColor = '#dc3545';
                     } else {
-                        if (!campo.value || campo.value.trim() === '') {
-                            valido = false;
-                            mensaje = `Por favor complete el campo ${campo.labels?.[0]?.textContent || 'requerido'}.`;
-                            campo.focus();
-                            campo.style.borderColor = '#dc3545';
-                        } else {
-                            campo.style.borderColor = '';
-                        }
+                        campo.style.borderColor = '';
                     }
-                });
-                
-                if (!valido && mensaje) {
-                    mostrarError(mensaje);
+                } else if (campo.type === 'checkbox') {
+                    if (!campo.checked) {
+                        valido = false;
+                        mensaje = 'Debe aceptar el tratamiento de sus datos personales para continuar.';
+                        campo.focus();
+                    }
+                } else {
+                    if (!campo.value || campo.value.trim() === '') {
+                        valido = false;
+                        mensaje = `Por favor complete el campo ${campo.labels?.[0]?.textContent || 'requerido'}.`;
+                        campo.focus();
+                        campo.style.borderColor = '#dc3545';
+                    } else {
+                        campo.style.borderColor = '';
+                    }
                 }
-                
-                return valido;
+            });
+
+            if (!valido && mensaje) {
+                mostrarError(mensaje);
             }
 
-            // --- PASO 1: VERIFICAR IDENTIFICACIÓN (mejorado) ---
-            btnSiguiente.addEventListener('click', function(e) {
-                // Prevenir múltiples clics
-                if (this.disabled) return;
-                
-                const docValue = fDoc.value.trim();
-                if(!docValue) {
-                    mostrarError('Por favor ingrese su número de documento.');
-                    fDoc.focus();
-                    fDoc.style.borderColor = '#dc3545';
-                    return;
-                }
-                
-                // Deshabilitar botón temporalmente
-                this.disabled = true;
-                
-                // Mostrar loading
-                Swal.fire({
-                    title: 'Verificando...',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+            return valido;
+        }
 
-                fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?identificacion=${encodeURIComponent(docValue)}`)
+        // --- PASO 1: VERIFICAR IDENTIFICACIÓN (mejorado) ---
+        btnSiguiente.addEventListener('click', function (e) {
+            // Prevenir múltiples clics
+            if (this.disabled) return;
+
+            const docValue = fDoc.value.trim();
+            if (!docValue) {
+                mostrarError('Por favor ingrese su número de documento.');
+                fDoc.focus();
+                fDoc.style.borderColor = '#dc3545';
+                return;
+            }
+
+            // Deshabilitar botón temporalmente
+            this.disabled = true;
+
+            // Mostrar loading
+            Swal.fire({
+                title: 'Verificando...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`{% url 'Eventos:verificar_asistente_ajax' actividad.id %}?identificacion=${encodeURIComponent(docValue)}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error en la comunicación con el servidor');
@@ -445,7 +462,7 @@
                     Swal.close();
                     // Habilitar botón nuevamente
                     this.disabled = false;
-                    
+
                     if (data.status === 'YA_CONFIRMADO' || data.status === 'SOLO_REGISTRADO') {
                         Swal.fire({
                             icon: 'info',
@@ -457,7 +474,7 @@
                                 window.location.reload(true);
                             }
                         });
-                    } 
+                    }
                     else if (data.status === 'SOLICITAR_PIN') {
                         document.getElementById('txtNombrePin').innerText = data.nombres || 'usuario';
                         inputAccion.value = 'procesar_pin';
@@ -465,7 +482,7 @@
                         bPin.style.display = 'block';
                         // Enfocar campo PIN
                         document.getElementById('fPin').focus();
-                    } 
+                    }
                     else if (data.status === 'RECHAZAR_NUEVO_REGISTRO') {
                         Swal.fire({
                             icon: 'error',
@@ -478,21 +495,21 @@
                     }
                     else if (data.status === 'COMPLETAR_REGISTRO' || data.status === 'NUEVO_REGISTRO') {
                         // Poblar formulario con datos existentes si los hay
-                        if(data.status === 'COMPLETAR_REGISTRO') {
-                            if(data.nombres) document.getElementById('fNom').value = data.nombres;
-                            if(data.apellidos) document.getElementById('fApe').value = data.apellidos;
-                            if(data.correo) document.getElementById('fMail').value = data.correo;
-                            if(data.organizacion_origen) document.getElementById('fOrg').value = data.organizacion_origen;
-                            if(data.telefono) document.getElementById('fTel').value = data.telefono;
-                            if(data.genero) document.getElementById('fGenero').value = data.genero;
-                            if(data.discapacidad) document.getElementById('fDiscapacidad').value = data.discapacidad;
-                            if(data.autoriza_datos) document.getElementById('autorizaDatos').checked = true;
+                        if (data.status === 'COMPLETAR_REGISTRO') {
+                            if (data.nombres) document.getElementById('fNom').value = data.nombres;
+                            if (data.apellidos) document.getElementById('fApe').value = data.apellidos;
+                            if (data.correo) document.getElementById('fMail').value = data.correo;
+                            if (data.organizacion_origen) document.getElementById('fOrg').value = data.organizacion_origen;
+                            if (data.telefono) document.getElementById('fTel').value = data.telefono;
+                            if (data.genero) document.getElementById('fGenero').value = data.genero;
+                            if (data.discapacidad) document.getElementById('fDiscapacidad').value = data.discapacidad;
+                            if (data.autoriza_datos) document.getElementById('autorizaDatos').checked = true;
                         }
-                        
+
                         // Poblar select de cargos
                         const selectCargo = document.getElementById('fCargo');
                         selectCargo.innerHTML = '<option value="">-- Seleccione --</option>';
-                        
+
                         if (data.cargos && data.cargos.length > 0) {
                             data.cargos.forEach(cargo => {
                                 const opt = document.createElement('option');
@@ -500,16 +517,16 @@
                                 opt.textContent = cargo.nombre;
                                 selectCargo.appendChild(opt);
                             });
-                            
+
                             if (data.cargos.length === 1) {
                                 selectCargo.value = data.cargos[0].id;
                             }
                         }
-                        
+
                         inputAccion.value = 'registrar_nuevo';
                         bIdentificacion.style.display = 'none';
                         bRegistro.style.display = 'block';
-                        
+
                         // Enfocar el primer campo del formulario
                         document.getElementById('fNom').focus();
                     } else {
@@ -522,98 +539,98 @@
                     mostrarError('Error de conexión. Por favor, verifique su red e intente nuevamente.');
                     console.error('Error en verificación:', error);
                 });
-            });
+        });
 
-            // --- PASO 2: ENVIAR VALIDACIÓN DE PIN (mejorado) ---
-            btnValidarPin.addEventListener('click', function(e) {
-                if (this.disabled) return;
-                
-                const pinValue = document.getElementById('fPin').value.trim();
-                if(!pinValue || pinValue.length < 4) {
-                    mostrarError('Por favor ingrese el código PIN de 4 dígitos.');
-                    document.getElementById('fPin').focus();
-                    document.getElementById('fPin').style.borderColor = '#dc3545';
-                    return;
-                }
-                
-                const formData = new FormData(document.getElementById('formAsistencia'));
-                enviarFormulario(formData);
-            });
+        // --- PASO 2: ENVIAR VALIDACIÓN DE PIN (mejorado) ---
+        btnValidarPin.addEventListener('click', function (e) {
+            if (this.disabled) return;
 
-            // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO (mejorado) ---
-            btnRegistrarFinal.addEventListener('click', function(e) {
-                if (this.disabled) return;
-                
-                // Validar campos requeridos
-                if (!validarCampos()) {
-                    return;
-                }
-                
-                // Verificar autorización de datos
-                if (!document.getElementById('autorizaDatos').checked) {
-                    mostrarError('Debe aceptar el tratamiento de sus datos personales para continuar con el registro.');
-                    document.getElementById('autorizaDatos').focus();
-                    return;
-                }
-                
-                // Validar formato de email
-                const email = document.getElementById('fMail').value.trim();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    mostrarError('Por favor ingrese un correo electrónico válido.');
-                    document.getElementById('fMail').focus();
-                    document.getElementById('fMail').style.borderColor = '#dc3545';
-                    return;
-                }
-                
-                const formData = new FormData(document.getElementById('formAsistencia'));
-                enviarFormulario(formData);
-            });
-
-            // --- Event Listeners para mejorar UX en móviles ---
-            
-            // 1. Permitir enviar con Enter en campos de texto
-            document.querySelectorAll('input, select').forEach(input => {
-                input.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        // Determinar qué botón debe activarse según el bloque visible
-                        if (bIdentificacion.style.display !== 'none') {
-                            btnSiguiente.click();
-                        } else if (bPin.style.display !== 'none') {
-                            btnValidarPin.click();
-                        } else if (bRegistro.style.display !== 'none') {
-                            btnRegistrarFinal.click();
-                        }
-                    }
-                });
-            });
-
-            // 2. Limpiar estilos de error al enfocar
-            document.querySelectorAll('input, select').forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.style.borderColor = '';
-                });
-            });
-
-            // 3. Manejar el evento 'touchstart' en dispositivos táctiles
-            // (No necesario si usamos 'click', pero agregamos para compatibilidad)
-            if ('ontouchstart' in window) {
-                [btnSiguiente, btnValidarPin, btnRegistrarFinal].forEach(btn => {
-                    if (btn) {
-                        btn.addEventListener('touchstart', function(e) {
-                            // Prevenir clics duplicados en dispositivos táctiles
-                            if (this.disabled) {
-                                e.preventDefault();
-                            }
-                        });
-                    }
-                });
+            const pinValue = document.getElementById('fPin').value.trim();
+            if (!pinValue || pinValue.length < 4) {
+                mostrarError('Por favor ingrese el código PIN de 4 dígitos.');
+                document.getElementById('fPin').focus();
+                document.getElementById('fPin').style.borderColor = '#dc3545';
+                return;
             }
 
-            // 4. Manejar casos donde el usuario cierra la alerta sin recargar
-            // (Por si la página no se recarga automáticamente)
-            console.log('Portal de registro de asistencia cargado correctamente.');
+            const formData = new FormData(document.getElementById('formAsistencia'));
+            enviarFormulario(formData);
         });
-    </script>
+
+        // --- PASO 2 ALT: ENVIAR NUEVO REGISTRO (mejorado) ---
+        btnRegistrarFinal.addEventListener('click', function (e) {
+            if (this.disabled) return;
+
+            // Validar campos requeridos
+            if (!validarCampos()) {
+                return;
+            }
+
+            // Verificar autorización de datos
+            if (!document.getElementById('autorizaDatos').checked) {
+                mostrarError('Debe aceptar el tratamiento de sus datos personales para continuar con el registro.');
+                document.getElementById('autorizaDatos').focus();
+                return;
+            }
+
+            // Validar formato de email
+            const email = document.getElementById('fMail').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                mostrarError('Por favor ingrese un correo electrónico válido.');
+                document.getElementById('fMail').focus();
+                document.getElementById('fMail').style.borderColor = '#dc3545';
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('formAsistencia'));
+            enviarFormulario(formData);
+        });
+
+        // --- Event Listeners para mejorar UX en móviles ---
+
+        // 1. Permitir enviar con Enter en campos de texto
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Determinar qué botón debe activarse según el bloque visible
+                    if (bIdentificacion.style.display !== 'none') {
+                        btnSiguiente.click();
+                    } else if (bPin.style.display !== 'none') {
+                        btnValidarPin.click();
+                    } else if (bRegistro.style.display !== 'none') {
+                        btnRegistrarFinal.click();
+                    }
+                }
+            });
+        });
+
+        // 2. Limpiar estilos de error al enfocar
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('focus', function () {
+                this.style.borderColor = '';
+            });
+        });
+
+        // 3. Manejar el evento 'touchstart' en dispositivos táctiles
+        // (No necesario si usamos 'click', pero agregamos para compatibilidad)
+        if ('ontouchstart' in window) {
+            [btnSiguiente, btnValidarPin, btnRegistrarFinal].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('touchstart', function (e) {
+                        // Prevenir clics duplicados en dispositivos táctiles
+                        if (this.disabled) {
+                            e.preventDefault();
+                        }
+                    });
+                }
+            });
+        }
+
+        // 4. Manejar casos donde el usuario cierra la alerta sin recargar
+        // (Por si la página no se recarga automáticamente)
+        console.log('Portal de registro de asistencia cargado correctamente.');
+    });
+</script>
 {% endblock %}

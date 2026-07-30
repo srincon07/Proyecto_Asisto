@@ -98,10 +98,18 @@ class ActividadProgramadaForm(forms.ModelForm):
         # Dejamos el campo vacío inicialmente; se llenará dinámicamente vía JS/AJAX
         selected_tipo = self.data.get(self.add_prefix("id_tipo_actividad"))
         
-        # Si estamos editando un evento existente, obtener la organización
+        # Obtener la organización para aplicar restricciones en el formulario
+        organizacion = None
         if self.instance.pk:
             tipo_actividad = self.instance.id_tipo_actividad
             organizacion = tipo_actividad.id_linea.id_objetivo.id_unidad.id_organizacion
+        elif self.user and self.user.is_authenticated:
+            # Intentar resolver la organización a partir del cargo del usuario
+            cargo_rel = self.user.personacargo_set.select_related('cargo__id_unidad__id_organizacion').first()
+            if cargo_rel:
+                organizacion = cargo_rel.cargo.id_unidad.id_organizacion
+        
+        if organizacion:
             self._apply_plan_restrictions(organizacion)
 
         if selected_tipo:

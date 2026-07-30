@@ -222,17 +222,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const wrapperQRInvertido = chkQRInvertido ? chkQRInvertido.closest('.form-check') : null; // o el contenedor superior
 
     async function updatePlanRestrictions() {
-        const objetivoId = objetivoSelect.value;
-        
-        if (!objetivoId) {
-            showAllFeatures();
-            return;
+        const objetivoId = objetivoSelect ? objetivoSelect.value : '';
+        let url = `{% url 'Eventos:get_plan_restrictions' %}`;
+        if (objetivoId) {
+            url += `?objetivo_id=${objetivoId}`;
         }
 
         try {
-            const response = await fetch(
-                `{% url 'Eventos:get_plan_restrictions' %}?objetivo_id=${objetivoId}`
-            );
+            const response = await fetch(url);
             const data = await response.json();
 
             applyPlanVisibility(data);
@@ -352,23 +349,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     toggleFormulario();
 
-    // --- LÓGICA PARA NUEVOS REGISTROS: Evaluar y asignar el primer objetivo automáticamente ---
-    {% if not evento %}
-    if (objetivoSelect && !objetivoSelect.value) {
-        // Buscar la primera opción válida (excluyendo el placeholder vacío)
-        const primeraOpcionValida = objetivoSelect.querySelector('option:not([value=""])');
-        if (primeraOpcionValida) {
-            objetivoSelect.value = primeraOpcionValida.value;
-            // Cargar automáticamente las líneas de acción de este primer objetivo
-            cargarLineas(objetivoSelect.value);
-        }
-    }
-    {% endif %}
-    
-    // Ejecutar inmediatamente al renderizar si el objetivo ya cuenta con un valor seleccionado
-    if (objetivoSelect && objetivoSelect.value) {
-        updatePlanRestrictions();
-    }
+    // Ejecutar inmediatamente al renderizar para validar restricciones
+    updatePlanRestrictions();
 });
 
 // ... MANTENER FUNCIONES EXISTENTES (cargarLineas, cargarTipos, confirmarEliminacion)

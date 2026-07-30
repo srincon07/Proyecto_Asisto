@@ -62,9 +62,27 @@ class Organizacion(models.Model):
                     raise ValidationError({
                         field_name: 'Please enter a valid URL format.'
                     })
+
     
     def __str__(self):
         return self.nombre_organizacion
+
+    @property
+    def texto_consentimiento_formateado(self):
+        """
+        Dinamically replaces placeholders with actual field values.
+        """
+        if not self.texto_consentimiento:
+            return ""
+        
+        nombre = self.nombre_organizacion or "[nombre_organizacion]"
+        correo = self.correo_tratamiento_datos or "[correo_tratamiento_datos]"
+        
+        return (
+            self.texto_consentimiento
+            .replace("[nombre_organizacion]", nombre)
+            .replace("[correo_tratamiento_datos]", correo)
+        )
 
     class Meta:
         verbose_name = "Organización"

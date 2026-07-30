@@ -1,7 +1,5 @@
 import json
-from email.mime.image import MIMEImage
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 import logging
 import uuid
 from django.views import View
@@ -394,7 +392,7 @@ class ProcesarAsistenciaView(View):
         
         return JsonResponse({"status": "success", "message": "Su participación ha sido registrada con éxito."})
     
-@method_decorator(es_miembro_grupo('Administrador', 'Organizador', 'Lector-Asistencia'), name='dispatch')
+@login_required
 def interfaz_escaneo_asistencia(request, actividad_id):
     """Renderiza la pantalla de captura para el organizador de la puerta."""
     actividad = get_object_or_404(ActividadProgramada, id=actividad_id)
@@ -466,16 +464,32 @@ def dashboard_view(request):
     
 @require_http_methods(["GET"])
 def get_plan_restrictions(request):
-    """AJAX endpoint that returns plan restrictions based on Objetivo"""
+    """AJAX endpoint that returns plan restrictions based on Objetivo or current User's Organization"""
     objetivo_id = request.GET.get('objetivo_id')
+    organizacion = None
     
-    if not objetivo_id:
-        return JsonResponse({'error': 'Missing objetivo_id'}, status=400)
-    
-    try:
-        objetivo = Objetivo.objects.select_related('id_unidad__id_organizacion').get(pk=objetivo_id)
-        organizacion = objetivo.id_unidad.id_organizacion
+    if objetivo_id:
+        try:
+            objetivo = Objetivo.objects.select_related('id_unidad__id_organizacion').get(pk=objetivo_id)
+            organizacion = objetivo.id_unidad.id_organizacion
+        except Objetivo.DoesNotExist:
+            return JsonResponse({'error': 'Objetivo not found'}, status=404)
+            
+    if not organizacion and request.user.is_authenticated:
+        # Try to resolve organization from the logged-in user's cargos
+        cargo_rel = request.user.personacargo_set.select_related('cargo__id_unidad__id_organizacion').first()
+        if cargo_rel:
+            organizacion = cargo_rel.cargo.id_unidad.id_organizacion
+
+    if not organizacion:
+        # Fallback to the first organization in the system if no organization is resolved
+        from EstructuraApp.models import Organizacion
+        organizacion = Organizacion.objects.first()
+
+    if not organizacion:
+        return JsonResponse({'error': 'No organization found'}, status=404)
         
+    try:
         # Calcular eventos creados en el mes actual para esta organización
         ahora = timezone.now()
         eventos_mes = ActividadProgramada.objects.filter(
@@ -498,5 +512,5 @@ def get_plan_restrictions(request):
         }
         
         return JsonResponse(restrictions)
-    except Objetivo.DoesNotExist:
-        return JsonResponse({'error': 'Objetivo not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

@@ -12,8 +12,7 @@ from .models import Evaluacion, Pregunta, OpcionRespuesta, RespuestaAnonima, Com
 from .forms import EvaluacionForm, PreguntaFormSet, OpcionFormSet
 from .services import send_mail_evaluacion
 
-@login_required
-@es_miembro_grupo('Organizador')
+@es_miembro_grupo('Administrador','Organizador')
 def configurar_evaluacion(request, actividad_id):
     actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
     # Obtenemos o creamos la evaluación ligada a la actividad
@@ -115,8 +114,7 @@ def procesar_evaluacion(request, actividad_id, token_asistencia):
     
     return redirect('EvaluacionesApp:agradecimiento')
     
-@login_required
-@es_miembro_grupo('Organizador')
+@es_miembro_grupo('Administrador', 'Organizador')
 def configurar_opciones(request, pregunta_id):
     pregunta = get_object_or_404(Pregunta, pk=pregunta_id)
     
@@ -156,8 +154,7 @@ def configurar_opciones(request, pregunta_id):
         'pregunta': pregunta
     })
     
-@login_required
-@es_miembro_grupo('Organizador')
+@es_miembro_grupo('Administrador', 'Organizador')
 def gestionar_evaluacion(request, actividad_id):
     actividad = get_object_or_404(ActividadProgramada, pk=actividad_id)
     
