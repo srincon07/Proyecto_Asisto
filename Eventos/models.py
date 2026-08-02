@@ -73,7 +73,18 @@ class RegistroAsistencia(models.Model):
     estado = models.CharField(
         max_length=15, choices=ESTADO_CHOICES, default="REGISTRADO"
     )
-    # En el modelo RegistroAsistencia
+    organizacion_origen = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Empresa/Dependencia",
+    )
+    seudonimo = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Seudónimo",
+    )
     codigo_pase_unico = models.CharField(
         max_length=50, unique=True, null=True, blank=True
     )

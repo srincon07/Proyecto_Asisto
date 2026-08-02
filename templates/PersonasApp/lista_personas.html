@@ -40,7 +40,7 @@
                         <tr>
                             <th class="ps-4">Identificación</th>
                             <th>Nombre Completo</th>
-                            <th>Organización / Discapacidad</th>
+                            <th>Discapacidad</th>
                             <th>Contacto</th>
                             <th>Roles</th>
                             <th>Cargos Asignados</th>
@@ -58,13 +58,12 @@
                             <td class="fw-bold text-primary">{{ persona.nombres }} {{ persona.apellidos }}</td>
                             <td class="text-primary">
                                 <div class="d-flex flex-column">
-                                    <span class="text-secondary">
-                                        <i class="bi bi-building me-1"></i> {{ persona.organizacion_origen|default:"Particular/Externo" }}
-                                    </span>
                                     {% if persona.discapacidad %}
                                         <span class="badge bg-info text-primary mt-1 self-start" style="max-width: max-content; font-size: 0.7rem;">
                                             <i class="bi bi-eye-fill me-1"></i> Discapacidad: {{ persona.discapacidad.nombre_discapacidad }}
                                         </span>
+                                    {% else %}
+                                        <span class="text-muted fst-italic small">Sin discapacidad</span>
                                     {% endif %}
                                 </div>
                             </td>

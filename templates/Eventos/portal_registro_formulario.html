@@ -141,9 +141,16 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
 
                         <!-- Empresa/Dependencia -->
                         <div class="form-floating mb-3">
-                            <input type="text" name="organizacion_o_dependencia" class="form-control" id="fOrg"
+                            <input type="text" name="organizacion_origen" class="form-control" id="fOrg"
                                 placeholder="Empresa/Dependencia">
                             <label for="fOrg"><i class="bi bi-building me-2"></i>Empresa o Dependencia</label>
+                        </div>
+
+                        <!-- Seudónimo -->
+                        <div class="form-floating mb-3">
+                            <input type="text" name="seudonimo" class="form-control" id="fSeudonimo"
+                                placeholder="Seudónimo">
+                            <label for="fSeudonimo"><i class="bi bi-person-vcard me-2"></i>Seudónimo</label>
                         </div>
 
                         <!-- Discapacidad -->
@@ -500,6 +507,7 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
                             if (data.apellidos) document.getElementById('fApe').value = data.apellidos;
                             if (data.correo) document.getElementById('fMail').value = data.correo;
                             if (data.organizacion_origen) document.getElementById('fOrg').value = data.organizacion_origen;
+                            if (data.seudonimo) document.getElementById('fSeudonimo').value = data.seudonimo;
                             if (data.telefono) document.getElementById('fTel').value = data.telefono;
                             if (data.genero) document.getElementById('fGenero').value = data.genero;
                             if (data.discapacidad) document.getElementById('fDiscapacidad').value = data.discapacidad;

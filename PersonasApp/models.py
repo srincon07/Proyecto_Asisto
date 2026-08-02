@@ -64,9 +64,6 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     genero = models.CharField(
         max_length=20, choices=OPCIONES_GENERO, default="Masculino"
     )
-    organizacion_origen = models.CharField(
-        max_length=150, blank=True, null=True, verbose_name="Empresa/Dependencia"
-    )
     
     # Data Treatment Policy Fields
     autoriza_datos = models.BooleanField(

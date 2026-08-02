@@ -17,7 +17,6 @@ class PersonaForm(forms.ModelForm):
             "identificacion",
             "nombres",
             "apellidos",
-            "organizacion_origen",
             "email",
             "telefono",
             "genero",
@@ -36,12 +35,6 @@ class PersonaForm(forms.ModelForm):
             ),
             "apellidos": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Apellidos"}
-            ),
-            "organizacion_origen": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "organización o Dependencia",
-                }
             ),
             "email": forms.EmailInput(
                 attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}

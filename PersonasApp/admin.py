@@ -24,7 +24,7 @@ class PersonaPersonalizadoAdmin(UserAdmin):
             'fields': ('identificacion', 'nombres', 'apellidos', 'genero', 'telefono')
         }),
         ('Información Institucional', {
-            'fields': ('organizacion_origen', 'discapacidad')
+            'fields': ('discapacidad',)
         }),
         ('Tratamiento de Datos', {
             'fields': ('autoriza_datos', 'fecha_autoriza', 'ip_autoriza'),

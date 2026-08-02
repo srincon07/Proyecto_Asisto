@@ -54,4 +54,5 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('api/indicadores/', views.api_indicadores, name='api_indicadores'),
     path('api/plan-restrictions/', views.get_plan_restrictions, name='get_plan_restrictions'),
+    path('actividad/<int:actividad_id>/asistencia/excel/', views.exportar_asistencia_excel, name='exportar_asistencia_excel'),
 ]

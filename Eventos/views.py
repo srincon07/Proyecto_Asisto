@@ -2,12 +2,13 @@ import json
 from django.views.decorators.http import require_http_methods
 import logging
 import uuid
+from datetime import datetime
 from django.views import View
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from datetime import timedelta
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
@@ -26,12 +27,14 @@ from .forms import (
 )  # Formularios creados con ModelForm
 from .services import (
     get_or_create_persona,
+    actualizar_metadatos_registro,
     enviar_notificacion_asistencia,
     procesar_csv_asistentes,
     obtener_datos_dashboard,
     procesar_verificacion_asistente,
     procesar_validacion_asistencia_pase_digital
 )
+from .exportadores import generar_excel_asistencia
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +75,7 @@ def programar_actividad(request, pk=None):
 def lista_eventos(request):
     actividades = ActividadProgramada.objects.select_related(
         "id_tipo_actividad", "id_responsable"
-    ).order_by("fecha_hora_inicio")
+    ).order_by("-fecha_hora_inicio")
     ahora = timezone.now()
 
     for act in actividades:
@@ -359,6 +362,7 @@ class ProcesarAsistenciaView(View):
                     "codigo_pase_unico": f"PASE-{uuid.uuid4().hex[:8].upper()}"
                 }
             )
+            actualizar_metadatos_registro(registro, request)
             if not creado:
                 return JsonResponse({"status": "error", "message": "Ya se encuentra prerregistrado."}, status=400)
             
@@ -386,6 +390,7 @@ class ProcesarAsistenciaView(View):
                 
                 }
         )
+        actualizar_metadatos_registro(registro, request)
         
         if not creado and registro.estado == "CONFIRMADO":
             return JsonResponse({"status": "error", "message": "Ya registró su asistencia."}, status=400)
@@ -514,3 +519,59 @@ def get_plan_restrictions(request):
         return JsonResponse(restrictions)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+@es_miembro_grupo('Administrador', 'Organizador')
+def exportar_asistencia_excel(request, actividad_id):
+    """
+    Descarga el reporte de asistencia de una actividad en formato .xlsx.
+    Replica EXACTAMENTE la misma resolución de datos que
+    panel_asistentes_actividad, para que el Excel y la vista HTML/PDF
+    nunca queden desincronizados.
+    """
+    # 1. Misma resolución de actividad + cadena de FKs hasta Organización
+    actividad = get_object_or_404(
+        ActividadProgramada.objects.select_related(
+            "id_tipo_actividad__id_linea__id_objetivo__id_unidad__id_organizacion"
+        ),
+        pk=actividad_id
+    )
+ 
+    # 2. Misma extracción segura de la organización
+    organizacion = None
+    try:
+        tipo_actividad = actividad.id_tipo_actividad
+        linea = tipo_actividad.id_linea
+        objetivo = linea.id_objetivo
+        unidad = objetivo.id_unidad
+        organizacion = unidad.id_organizacion
+    except AttributeError:
+        # Algún eslabón intermedio es nulo en la BD
+        pass
+ 
+    # 3. Mismo queryset de asistencias (manager relacionado, no el modelo directo)
+    asistencias = (
+        actividad.asistencias.all()
+        .select_related("asistente")
+        .prefetch_related("asistente__personacargo_set__cargo")
+        .order_by("-fecha_registro")
+    )
+ 
+    # Filtro opcional por estado vía querystring: ?estado=CONFIRMADO
+    estado = request.GET.get("estado")
+    if estado in ("CONFIRMADO", "REGISTRADO"):
+        asistencias = asistencias.filter(estado=estado)
+ 
+    wb = generar_excel_asistencia(
+        actividad=actividad,
+        asistencias=asistencias,
+        organizacion=organizacion,
+        usuario=request.user,
+    )
+ 
+    nombre_archivo = f"Asistencia_{actividad}_{datetime.now():%Y%m%d_%H%M}.xlsx"
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+    wb.save(response)
+    return response

@@ -42,7 +42,6 @@ def get_or_create_persona(request, cargo_id_default=None):
         "apellidos": safe_get("apellidos"),
         "email": safe_get("correo").lower(),
         "telefono": safe_get("telefono"),
-        "organizacion_origen": safe_get("organizacion_o_dependencia"),
         "genero": safe_get("genero") or "Masculino",
     }
 
@@ -106,6 +105,31 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR', '')
     return ip
+
+
+def obtener_datos_registro(source):
+    """Extrae los datos de registro de asistencia desde un request o un diccionario."""
+
+    def safe_get(key):
+        if hasattr(source, "POST"):
+            val = source.POST.get(key)
+        else:
+            val = source.get(key)
+        return str(val).strip() if val is not None else ""
+
+    return {
+        "organizacion_origen": safe_get("organizacion_origen") or safe_get("organizacion_o_dependencia"),
+        "seudonimo": safe_get("seudonimo"),
+    }
+
+
+def actualizar_metadatos_registro(registro, source):
+    """Guarda la organización y el seudónimo asociados al registro de asistencia."""
+    datos = obtener_datos_registro(source)
+    registro.organizacion_origen = datos["organizacion_origen"]
+    registro.seudonimo = datos["seudonimo"]
+    registro.save(update_fields=["organizacion_origen", "seudonimo"])
+
 
 def procesar_verificacion_asistente(actividad, documento):
     """
@@ -183,7 +207,8 @@ def procesar_verificacion_asistente(actividad, documento):
             "apellidos": persona.apellidos,
             "correo": persona.email,
             "telefono": persona.telefono or "",
-            "organizacion_origen": persona.organizacion_origen or "",
+            "organizacion_origen": (registro.organizacion_origen if registro else persona.organizacion_origen or "") or "",
+            "seudonimo": (registro.seudonimo if registro else "") or "",
             "genero": persona.genero or "",
             "discapacidad": persona.discapacidad.id if persona.discapacidad else "",
             "cargos": cargos_data,
@@ -330,6 +355,7 @@ def procesar_csv_asistentes(archivo, actividad):
                         asistente=persona,
                         defaults={"estado": "REGISTRADO"}
                     )
+                    actualizar_metadatos_registro(registro, row)
                     
                     resultados["exitos"] += 1
                 except Exception as e:

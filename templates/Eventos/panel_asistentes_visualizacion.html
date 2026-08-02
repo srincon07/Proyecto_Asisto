@@ -100,6 +100,9 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
                 <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
                     <i class="bi bi-printer me-2"></i>Imprimir Reporte
                 </button>
+                <a class="btn btn-outline-success btn-sm" href="{% url 'Eventos:exportar_asistencia_excel' actividad.pk %}">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Exportar a Excel
+                </a>
             </div>
 
             <div class="row g-3 mb-4 align-items-center">
@@ -152,7 +155,14 @@ Panel de Control de Asistencia - {{ actividad.nombre_evento }}
                             <td class="fw-bold text-primary">{{ reg.asistente.identificacion }}</td>
                             <td class="fw-semibold text-primary">{{ reg.asistente.nombres }} {{ reg.asistente.apellidos }}</td>
                             <td class="text-primary">{{ reg.asistente.email }}</td>
-                            <td class="text-primary">{{ reg.asistente.organizacion_origen|default:"Particular/Externo" }}</td>
+                            <td class="text-primary">
+                                {{ reg.organizacion_origen|default:"Particular/Externo" }}
+                                {% if reg.seudonimo %}
+                                <div class="small text-muted mt-1">
+                                    <i class="bi bi-person-vcard me-1"></i>{{ reg.seudonimo }}
+                                </div>
+                                {% endif %}
+                            </td>
                             
                             <td class="text-primary">
                                 {% for cargo in reg.asistente.personacargo_set.all %}
