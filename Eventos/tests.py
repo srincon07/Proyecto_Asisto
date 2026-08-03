@@ -5,7 +5,7 @@ from EstructuraApp.models import Cargo, Linea, Objetivo, Organizacion, TipoActiv
 from PersonasApp.models import Persona
 
 from .models import ActividadProgramada, RegistroAsistencia
-from .services import procesar_verificacion_asistente
+from .services import get_or_create_persona, procesar_verificacion_asistente
 
 
 class RegistroAsistenciaFieldTest(TestCase):
@@ -20,6 +20,17 @@ class RegistroAsistenciaFieldTest(TestCase):
 
 
 class VerificacionAsistenteServiceTest(TestCase):
+    def test_blank_email_is_normalized_for_registration(self):
+        Persona.objects.create(identificacion="111111111", nombres="Otro", apellidos="Usuario", email="")
+
+        request = type("Request", (), {"POST": {"identificacion": "999999999", "nombres": "Ana", "apellidos": "Pérez", "correo": "", "telefono": "", "genero": "Femenino", "autoriza_datos": "off"}})()
+
+        persona = get_or_create_persona(request)
+
+        self.assertEqual(persona.identificacion, "999999999")
+        self.assertNotEqual(persona.email, "")
+        self.assertTrue(persona.email.endswith("@asisto.local"))
+
     def test_existing_persona_verification_does_not_raise(self):
         organizacion = Organizacion.objects.create(
             nombre_organizacion="Org Test",

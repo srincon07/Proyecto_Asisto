@@ -35,12 +35,16 @@ def get_or_create_persona(request, cargo_id_default=None):
     # Si no hay documento, levantamos una excepción para que el proceso la atrape
     if not documento:
         raise ValueError("Documento no proporcionado.")
+
+    correo = safe_get("correo").lower()
+    if not correo:
+        correo = f"{documento.replace(' ', '')}@asisto.local"
     
     # Datos básicos usando la función segura
     datos = {
         "nombres": safe_get("nombres"),
         "apellidos": safe_get("apellidos"),
-        "email": safe_get("correo").lower(),
+        "email": correo,
         "telefono": safe_get("telefono"),
         "genero": safe_get("genero") or "Masculino",
     }
