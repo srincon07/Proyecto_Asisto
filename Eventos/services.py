@@ -207,7 +207,7 @@ def procesar_verificacion_asistente(actividad, documento):
             "apellidos": persona.apellidos,
             "correo": persona.email,
             "telefono": persona.telefono or "",
-            "organizacion_origen": (registro.organizacion_origen if registro else persona.organizacion_origen or "") or "",
+            "organizacion_origen": (registro.organizacion_origen if registro else "") or "",
             "seudonimo": (registro.seudonimo if registro else "") or "",
             "genero": persona.genero or "",
             "discapacidad": persona.discapacidad.id if persona.discapacidad else "",
