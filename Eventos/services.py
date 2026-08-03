@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from email.mime.image import MIMEImage
 from zoneinfo import ZoneInfo
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.core.cache import cache
@@ -39,6 +39,14 @@ def get_or_create_persona(request, cargo_id_default=None):
     correo = safe_get("correo").lower()
     if not correo:
         correo = f"{documento.replace(' ', '')}@asisto.local"
+
+    # Evitar el conflicto de correo antes de intentar crear la persona
+    if correo:
+        persona_con_correo = Persona.objects.filter(email=correo).exclude(identificacion=documento).first()
+        if persona_con_correo:
+            raise ValueError(
+                "El correo electrónico ya está registrado. Por favor, use otro correo o contacte a la organización."
+            )
     
     # Datos básicos usando la función segura
     datos = {
@@ -50,10 +58,18 @@ def get_or_create_persona(request, cargo_id_default=None):
     }
 
     # 1. Obtener o crear persona
-    persona, creada = Persona.objects.get_or_create(
-        identificacion=documento,
-        defaults=datos
-    )
+    try:
+        persona, creada = Persona.objects.get_or_create(
+            identificacion=documento,
+            defaults=datos
+        )
+    except IntegrityError as exc:
+        error_text = str(exc).lower()
+        if "unique constraint failed" in error_text and "personasapp_persona.email" in error_text:
+            raise ValueError(
+                "El correo electrónico ya está registrado. Por favor, use otro correo o contacte a la organización."
+            ) from exc
+        raise
 
     # 2. Si ya existía, actualizar campos
     if not creada:

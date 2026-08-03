@@ -301,6 +301,9 @@ class ProcesarAsistenciaView(View):
                 return self._procesar_registro(request)
             
             return JsonResponse({"status": "error", "message": "Acción inválida"}, status=400)
+        except ValueError as e:
+            logger.warning(f"Error de validación en ProcesarAsistenciaView: {e}")
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
         except Exception as e:
             logger.error(f"Error en ProcesarAsistenciaView: {e}")
             return JsonResponse({"status": "error", "message": "Error interno del servidor"}, status=500)

@@ -31,6 +31,30 @@ class VerificacionAsistenteServiceTest(TestCase):
         self.assertNotEqual(persona.email, "")
         self.assertTrue(persona.email.endswith("@asisto.local"))
 
+    def test_duplicate_email_raises_user_friendly_error(self):
+        Persona.objects.create(
+            identificacion="111111111",
+            nombres="Otro",
+            apellidos="Usuario",
+            email="duplicado@example.com",
+        )
+
+        request = type("Request", (), {
+            "POST": {
+                "identificacion": "999999999",
+                "nombres": "Ana",
+                "apellidos": "Pérez",
+                "correo": "duplicado@example.com",
+                "telefono": "",
+                "genero": "Femenino",
+                "autoriza_datos": "off",
+            },
+            "META": {},
+        })()
+
+        with self.assertRaisesMessage(ValueError, "correo electrónico"):
+            get_or_create_persona(request)
+
     def test_existing_persona_verification_does_not_raise(self):
         organizacion = Organizacion.objects.create(
             nombre_organizacion="Org Test",
