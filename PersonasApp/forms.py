@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import Group
-from .models import Persona, Discapacidad, PersonaCargo
+from .models import Ciudad, Pais, Persona, Discapacidad, PersonaCargo, Region
 from EstructuraApp.models import Cargo
 
 
@@ -20,7 +20,11 @@ class PersonaForm(forms.ModelForm):
             "email",
             "telefono",
             "genero",
+            "factor_rh",
             "discapacidad",
+            "pais",
+            "region",
+            "ciudad",
         ]
         widgets = {
             "identificacion": forms.TextInput(
@@ -43,7 +47,11 @@ class PersonaForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "+57 300 000 0000"}
             ),
             "genero": forms.Select(attrs={"class": "form-select"}),
+            "factor_rh": forms.Select(attrs={"class": "form-select"}),
             "discapacidad": forms.Select(attrs={"class": "form-select"}),
+            "pais": forms.Select(attrs={"class": "form-select"}),
+            "region": forms.Select(attrs={"class": "form-select"}),
+            "ciudad": forms.Select(attrs={"class": "form-select"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -89,6 +97,9 @@ class PersonaForm(forms.ModelForm):
                 self.initial[f"estado_{p_cargo.cargo.id}"] = p_cargo.estado
                 
         self.fields["discapacidad"].empty_label = "Seleccione..."
+        self.fields["pais"].queryset = Pais.objects.order_by("nombre")
+        self.fields["region"].queryset = Region.objects.select_related("pais").order_by("nombre")
+        self.fields["ciudad"].queryset = Ciudad.objects.select_related("region").order_by("nombre")
 
     def save(self, commit=True):
         persona = super().save(commit=commit)

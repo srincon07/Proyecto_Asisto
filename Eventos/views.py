@@ -16,7 +16,7 @@ from Eventos.models import (
     ActividadProgramada,
     RegistroAsistencia,
 )
-from PersonasApp.models import Persona, Discapacidad
+from PersonasApp.models import Ciudad, Discapacidad, Pais, Persona, Region
 from EstructuraApp.models import (
     Objetivo,
 )
@@ -252,11 +252,16 @@ def auto_registro_asistencia(request, actividad_id):
     )
     # Cargar generos para el formulario
     generos = [opcion[0] for opcion in Persona.OPCIONES_GENERO]
+    factores_rh = Persona.OPCIONES_FACTOR_RH
 
     context = {
         "actividad": actividad,
         "discapacidades": discapacidades,
         "generos": generos,
+        "factores_rh": factores_rh,
+        "paises": Pais.objects.order_by("nombre"),
+        "regiones": Region.objects.select_related("pais").order_by("nombre"),
+        "ciudades": Ciudad.objects.select_related("region").order_by("nombre"),
         "enlace_activo": enlace_activo,
         "modo_formulario": modo_formulario,
     }

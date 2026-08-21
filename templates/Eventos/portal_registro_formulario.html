@@ -84,6 +84,14 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
                                 required>
                             <label for="fDoc"><i class="bi bi-card-text me-2"></i>Documento de Identidad</label>
                         </div>
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="btnLeerDocumento">
+                                <i class="bi bi-upc-scan me-1"></i>Usar lector de código de barras
+                            </button>
+                        </div>
+                        <div id="estadoLector" class="form-text mb-3" aria-live="polite">
+                            También puede escribir el documento manualmente.
+                        </div>
                         <button type="button" class="btn btn-primary btn-lg w-100 rounded-3 shadow fw-bold"
                             id="btnSiguiente">
                             Siguiente <i class="bi bi-arrow-right-short"></i>
@@ -181,6 +189,27 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
                         </div>
 
                         <div class="mb-3">
+                            <label for="fRh" class="form-label fw-semibold"><i class="bi bi-droplet-half me-2"></i>Factor RH</label>
+                            <select name="factor_rh" id="fRh" class="form-select">
+                                <option value="">-- No especificado --</option>
+                                {% for valor, etiqueta in factores_rh %}
+                                <option value="{{ valor }}">{{ etiqueta }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3 position-relative">
+                            <label for="fProcedencia" class="form-label fw-semibold">Procedencia</label>
+                            <input type="search" id="fProcedencia" class="form-control" autocomplete="off"
+                                placeholder="Buscar ciudad...">
+                            <div id="listaProcedencia" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 10;"></div>
+                            <input type="hidden" name="pais" id="fPais">
+                            <input type="hidden" name="region" id="fRegion">
+                            <input type="hidden" name="ciudad" id="fCiudad">
+                            <div id="textoProcedencia" class="form-text">Seleccione una ciudad para ver región y país.</div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="fCargo" class="form-label fw-semibold">
                                 <i class="bi bi-briefcase me-2"></i>Cargo Institucional
                             </label>
@@ -272,8 +301,108 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
         const bRegistro = document.getElementById('bloqueCamposRegistro');
 
         const fDoc = document.getElementById('fDoc');
+        const fRh = document.getElementById('fRh');
+        const fProcedencia = document.getElementById('fProcedencia');
+        const listaProcedencia = document.getElementById('listaProcedencia');
+        const textoProcedencia = document.getElementById('textoProcedencia');
+        const procedencias = [
+            {% for ciudad in ciudades %}
+            { ciudad: '{{ ciudad.nombre|escapejs }}', ciudadId: '{{ ciudad.id }}', region: '{{ ciudad.region.nombre|escapejs }}', regionId: '{{ ciudad.region_id }}', pais: '{{ ciudad.region.pais.nombre|escapejs }}', paisId: '{{ ciudad.region.pais_id }}' },
+            {% endfor %}
+        ];
+        const btnLeerDocumento = document.getElementById('btnLeerDocumento');
+        const estadoLector = document.getElementById('estadoLector');
+        let lectorHidActivo = false;
+        let ultimaEntradaHid = 0;
         const inputAccion = document.getElementById('inputAccion');
         const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        function extraerDato(texto, etiquetas) {
+            const linea = texto.split(/[\r\n|;]/).map(valor => valor.trim()).find(valor =>
+                etiquetas.some(etiqueta => valor.toUpperCase().startsWith(etiqueta))
+            );
+            if (!linea) return '';
+            return linea.substring(linea.indexOf(':') + 1).trim();
+        }
+
+        function aplicarDatosDocumento(texto) {
+            const documento = extraerDato(texto, ['NUIP:', 'DOCUMENTO:', 'NUMERO:']) ||
+                (texto.match(/\b\d{7,12}\b/) || [])[0] || '';
+            const nombres = extraerDato(texto, ['NOMBRES:', 'NOMBRE:']);
+            const apellidos = extraerDato(texto, ['APELLIDOS:', 'APELLIDO:']);
+            const rh = extraerDato(texto, ['RH:', 'GRUPO SANGUINEO:', 'GRUPO SANGUÍNEO:']).toUpperCase();
+
+            if (!documento) {
+                mostrarError('El lector no devolvió un número de documento reconocible.');
+                return false;
+            }
+            fDoc.value = documento;
+            if (nombres) document.getElementById('fNom').value = nombres;
+            if (apellidos) document.getElementById('fApe').value = apellidos;
+            if (fRh && ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].includes(rh)) fRh.value = rh;
+            lectorHidActivo = false;
+            btnLeerDocumento.classList.remove('active');
+            btnLeerDocumento.innerHTML = '<i class="bi bi-upc-scan me-1"></i>Usar lector de código de barras';
+            estadoLector.textContent = 'Documento leído. Verifique el número y pulse Siguiente.';
+            return true;
+        }
+
+        function seleccionarProcedencia(item) {
+            document.getElementById('fPais').value = item.paisId;
+            document.getElementById('fRegion').value = item.regionId;
+            document.getElementById('fCiudad').value = item.ciudadId;
+            fProcedencia.value = item.ciudad;
+            textoProcedencia.textContent = `${item.ciudad} | ${item.region} | ${item.pais}`;
+            listaProcedencia.classList.add('d-none');
+        }
+
+        function mostrarProcedencias() {
+            const termino = fProcedencia.value.trim().toLowerCase();
+            listaProcedencia.innerHTML = '';
+            procedencias.filter(item => `${item.ciudad} ${item.region} ${item.pais}`.toLowerCase().includes(termino)).slice(0, 20).forEach(item => {
+                const opcion = document.createElement('button');
+                opcion.type = 'button';
+                opcion.className = 'list-group-item list-group-item-action';
+                opcion.textContent = `${item.ciudad} | ${item.region} | ${item.pais}`;
+                opcion.addEventListener('click', () => seleccionarProcedencia(item));
+                listaProcedencia.appendChild(opcion);
+            });
+            listaProcedencia.classList.toggle('d-none', listaProcedencia.children.length === 0);
+        }
+        fProcedencia.addEventListener('input', () => {
+            document.getElementById('fPais').value = '';
+            document.getElementById('fRegion').value = '';
+            document.getElementById('fCiudad').value = '';
+            mostrarProcedencias();
+        });
+        fProcedencia.addEventListener('focus', mostrarProcedencias);
+
+        btnLeerDocumento.addEventListener('click', function () {
+            lectorHidActivo = true;
+            fDoc.value = '';
+            fDoc.focus();
+            btnLeerDocumento.classList.add('active');
+            btnLeerDocumento.innerHTML = '<i class="bi bi-keyboard me-1"></i>Esperando lector...';
+            estadoLector.textContent = 'Conecte o use el lector HID. El documento se capturará automáticamente.';
+        });
+
+        fDoc.addEventListener('keydown', function (event) {
+            if (!lectorHidActivo) return;
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                aplicarDatosDocumento(fDoc.value);
+                return;
+            }
+            if (event.key.length === 1) {
+                const ahora = performance.now();
+                if (ahora - ultimaEntradaHid > 100) fDoc.value = '';
+                ultimaEntradaHid = ahora;
+            }
+        });
+
+        fDoc.addEventListener('input', function () {
+            if (lectorHidActivo) estadoLector.textContent = 'Leyendo documento...';
+        });
 
         // Configuración de la alerta de carga
         const loadingConfig = {
@@ -510,7 +639,18 @@ Registro de Asistencia - {{ actividad.nombre_evento }}
                             if (data.seudonimo) document.getElementById('fSeudonimo').value = data.seudonimo;
                             if (data.telefono) document.getElementById('fTel').value = data.telefono;
                             if (data.genero) document.getElementById('fGenero').value = data.genero;
+                            if (data.factor_rh) fRh.value = data.factor_rh;
                             if (data.discapacidad) document.getElementById('fDiscapacidad').value = data.discapacidad;
+                            if (data.pais) document.getElementById('fPais').value = data.pais;
+                            if (data.region) document.getElementById('fRegion').value = data.region;
+                            if (data.ciudad) {
+                                document.getElementById('fCiudad').value = data.ciudad;
+                                const procedencia = procedencias.find(item => item.ciudadId === String(data.ciudad));
+                                if (procedencia) {
+                                    fProcedencia.value = procedencia.ciudad;
+                                    textoProcedencia.textContent = `${procedencia.ciudad} | ${procedencia.region} | ${procedencia.pais}`;
+                                }
+                            }
                             if (data.autoriza_datos) document.getElementById('autorizaDatos').checked = true;
                         }
 

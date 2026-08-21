@@ -48,8 +48,22 @@
                         {{ form.genero }}
                     </div>
                     <div class="col-md-4 mt-3">
+                        <label class="form-label small fw-bold text-muted">Grupo sanguíneo</label>
+                        {{ form.factor_rh }}
+                    </div>
+                    <div class="col-md-4 mt-3">
                         <label class="form-label small fw-bold text-muted">Condición de Discapacidad</label>
                         {{ form.discapacidad }}
+                    </div>
+                    {{ form.pais.as_hidden }}
+                    {{ form.region.as_hidden }}
+                    {{ form.ciudad.as_hidden }}
+                    <div class="col-12 mt-3 position-relative">
+                        <label for="procedenciaPersona" class="form-label small fw-bold text-muted">Procedencia</label>
+                        <input type="search" id="procedenciaPersona" class="form-control" autocomplete="off"
+                            placeholder="Buscar ciudad...">
+                        <div id="listaProcedenciaPersona" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 10;"></div>
+                        <div id="textoProcedenciaPersona" class="form-text">Seleccione una ciudad para ver región y país.</div>
                     </div>
 
                     <div class="col-12 mt-4">
@@ -193,6 +207,49 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const procedenciaInput = document.getElementById('procedenciaPersona');
+    const procedenciaLista = document.getElementById('listaProcedenciaPersona');
+    const procedenciaTexto = document.getElementById('textoProcedenciaPersona');
+    const procedencias = [
+        {% for ciudad in form.fields.ciudad.queryset %}
+        { ciudad: '{{ ciudad.nombre|escapejs }}', ciudadId: '{{ ciudad.id }}', region: '{{ ciudad.region.nombre|escapejs }}', regionId: '{{ ciudad.region_id }}', pais: '{{ ciudad.region.pais.nombre|escapejs }}', paisId: '{{ ciudad.region.pais_id }}' },
+        {% endfor %}
+    ];
+
+    function seleccionarProcedencia(item) {
+        document.getElementById('id_pais').value = item.paisId;
+        document.getElementById('id_region').value = item.regionId;
+        document.getElementById('id_ciudad').value = item.ciudadId;
+        procedenciaInput.value = item.ciudad;
+        procedenciaTexto.textContent = `${item.ciudad} | ${item.region} | ${item.pais}`;
+        procedenciaLista.classList.add('d-none');
+    }
+
+    function mostrarProcedencias() {
+        const termino = procedenciaInput.value.trim().toLowerCase();
+        procedenciaLista.innerHTML = '';
+        procedencias.filter(item => `${item.ciudad} ${item.region} ${item.pais}`.toLowerCase().includes(termino)).slice(0, 20).forEach(item => {
+            const opcion = document.createElement('button');
+            opcion.type = 'button';
+            opcion.className = 'list-group-item list-group-item-action';
+            opcion.textContent = `${item.ciudad} | ${item.region} | ${item.pais}`;
+            opcion.addEventListener('click', () => seleccionarProcedencia(item));
+            procedenciaLista.appendChild(opcion);
+        });
+        procedenciaLista.classList.toggle('d-none', procedenciaLista.children.length === 0);
+    }
+
+    if (procedenciaInput) {
+        const ciudadInicial = procedencias.find(item => item.ciudadId === document.getElementById('id_ciudad').value);
+        if (ciudadInicial) seleccionarProcedencia(ciudadInicial);
+        procedenciaInput.addEventListener('input', function() {
+            document.getElementById('id_pais').value = '';
+            document.getElementById('id_region').value = '';
+            document.getElementById('id_ciudad').value = '';
+            mostrarProcedencias();
+        });
+        procedenciaInput.addEventListener('focus', mostrarProcedencias);
+    }
     
     // =================================================================
     // CONFIGURACIÓN ACTUAL: GESTIÓN DE CARGOS Y FILTRADO (PRESERVADO)
