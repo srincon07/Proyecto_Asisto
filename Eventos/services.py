@@ -14,7 +14,7 @@ from django.db.models.functions import TruncDate
 from django.core.cache import cache
 from .models import RegistroAsistencia, ActividadProgramada
 from django.utils import timezone
-from PersonasApp.models import Persona, Discapacidad, PersonaCargo
+from PersonasApp.models import Ciudad, Discapacidad, Pais, Persona, PersonaCargo, Region
 from EstructuraApp.models import Cargo
 
 logger = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ def get_or_create_persona(request, cargo_id_default=None):
         "email": correo,
         "telefono": safe_get("telefono"),
         "genero": safe_get("genero") or "Masculino",
+        "factor_rh": safe_get("factor_rh"),
     }
 
     # 1. Obtener o crear persona
@@ -83,6 +84,16 @@ def get_or_create_persona(request, cargo_id_default=None):
             persona.discapacidad = Discapacidad.objects.get(id=discapacidad_id)
         except Discapacidad.DoesNotExist:
             persona.discapacidad = None
+
+    for field_name, model in (("pais", Pais), ("region", Region), ("ciudad", Ciudad)):
+        value = safe_get(field_name)
+        if value:
+            try:
+                setattr(persona, field_name, model.objects.get(pk=value))
+            except model.DoesNotExist:
+                setattr(persona, field_name, None)
+        else:
+            setattr(persona, field_name, None)
             
     # 4. Gestionar Autorización de Datos
     autoriza_datos = request.POST.get("autoriza_datos", "off") == "on"
@@ -230,7 +241,11 @@ def procesar_verificacion_asistente(actividad, documento):
             "organizacion_origen": (registro.organizacion_origen if registro else "") or "",
             "seudonimo": (registro.seudonimo if registro else "") or "",
             "genero": persona.genero or "",
+            "factor_rh": persona.factor_rh or "",
             "discapacidad": persona.discapacidad.id if persona.discapacidad else "",
+            "pais": persona.pais_id or "",
+            "region": persona.region_id or "",
+            "ciudad": persona.ciudad_id or "",
             "cargos": cargos_data,
             "autoriza_datos": persona.autoriza_datos,
         }, 200

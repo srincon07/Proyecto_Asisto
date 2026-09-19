@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Persona, PersonaCargo, Discapacidad
+from .models import Ciudad, Pais, Persona, PersonaCargo, Discapacidad, Region
 
 class PersonaCargoInline(admin.TabularInline):
     model = PersonaCargo
@@ -21,10 +21,10 @@ class PersonaPersonalizadoAdmin(UserAdmin):
             'fields': ('email', 'password')
         }),
         ('Información Personal', {
-            'fields': ('identificacion', 'nombres', 'apellidos', 'genero', 'telefono')
+            'fields': ('identificacion', 'nombres', 'apellidos', 'genero', 'factor_rh', 'telefono')
         }),
         ('Información Institucional', {
-            'fields': ('discapacidad',)
+            'fields': ('discapacidad', 'pais', 'region', 'ciudad')
         }),
         ('Tratamiento de Datos', {
             'fields': ('autoriza_datos', 'fecha_autoriza', 'ip_autoriza'),
@@ -61,3 +61,26 @@ class DiscapacidadAdmin(admin.ModelAdmin):
     list_display = ("nombre_discapacidad", "estado")
     search_fields = ("nombre_discapacidad",)
     list_filter = ("estado",)
+
+
+@admin.register(Pais)
+class PaisAdmin(admin.ModelAdmin):
+    search_fields = ("nombre",)
+
+
+@admin.register(Region)
+class RegionAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "pais")
+    list_filter = ("pais",)
+    search_fields = ("nombre",)
+
+
+@admin.register(Ciudad)
+class CiudadAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "region", "pais")
+    list_filter = ("region__pais", "region")
+    search_fields = ("nombre",)
+
+    @admin.display(description="País")
+    def pais(self, obj):
+        return obj.region.pais

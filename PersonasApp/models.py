@@ -15,6 +15,47 @@ class Discapacidad(models.Model):
 
     class Meta:
         verbose_name_plural = "Discapacidades"
+
+
+class Pais(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = "País"
+        verbose_name_plural = "Países"
+
+
+class Region(models.Model):
+    pais = models.ForeignKey(Pais, on_delete=models.PROTECT, related_name="regiones")
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.nombre}, {self.pais.nombre}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["pais", "nombre"], name="unique_region_por_pais")
+        ]
+        verbose_name = "Región"
+        verbose_name_plural = "Regiones"
+
+
+class Ciudad(models.Model):
+    region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name="ciudades")
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.nombre}, {self.region.nombre}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["region", "nombre"], name="unique_ciudad_por_region")
+        ]
+        verbose_name = "Ciudad"
+        verbose_name_plural = "Ciudades"
         
 
 class PersonaManager(BaseUserManager):
@@ -52,6 +93,16 @@ class Persona(AbstractBaseUser, PermissionsMixin):
         ("Femenino", "Femenino"),
         ("Otro", "Otro"),
     ]
+    OPCIONES_FACTOR_RH = [
+        ("O+", "O positivo (O+)"),
+        ("O-", "O negativo (O-)"),
+        ("A+", "A positivo (A+)"),
+        ("A-", "A negativo (A-)"),
+        ("B+", "B positivo (B+)"),
+        ("B-", "B negativo (B-)"),
+        ("AB+", "AB positivo (AB+)"),
+        ("AB-", "AB negativo (AB-)"),
+    ]
 
     discapacidad = models.ForeignKey(
         Discapacidad, on_delete=models.CASCADE, null=True, blank=True
@@ -63,6 +114,21 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     telefono = models.CharField(max_length=30, blank=True)
     genero = models.CharField(
         max_length=20, choices=OPCIONES_GENERO, default="Masculino"
+    )
+    factor_rh = models.CharField(
+        max_length=3,
+        choices=OPCIONES_FACTOR_RH,
+        blank=True,
+        verbose_name="Factor RH",
+    )
+    pais = models.ForeignKey(
+        Pais, on_delete=models.PROTECT, null=True, blank=True, related_name="personas"
+    )
+    region = models.ForeignKey(
+        Region, on_delete=models.PROTECT, null=True, blank=True, related_name="personas"
+    )
+    ciudad = models.ForeignKey(
+        Ciudad, on_delete=models.PROTECT, null=True, blank=True, related_name="personas"
     )
     
     # Data Treatment Policy Fields
